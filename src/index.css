@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+
+:root {
+  font-family: 'Heebo', sans-serif;
+  color: #35275b;
+  background: #f8faf5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+
+.app-shell {
+  min-height: 100vh;
+  padding: 34px clamp(18px, 6vw, 92px) 30px;
+  background: radial-gradient(circle at 12% 14%, #eee8ff 0, transparent 28%), radial-gradient(circle at 85% 12%, #effdd4 0, transparent 25%), #fbfcf8;
+}
+.topbar { display: flex; justify-content: space-between; align-items: center; max-width: 1120px; margin: 0 auto 36px; gap: 24px; }
+.brand-block { display: grid; gap: 5px; }
+.eyebrow { color: #b4bd3c; font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+.eyebrow[type="button"] { border: 0; padding: 0; background: transparent; text-align: right; cursor: pointer; }
+.eyebrow[type="button"]:focus-visible { outline: 2px solid #8056c4; outline-offset: 4px; border-radius: 4px; }
+.eyebrow.admin-active { color: #d95b8f; }
+h1, h2, p { margin: 0; }
+.page-title, h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4vw, 48px); line-height: 1.1; color: #674493; }
+h1 { position: relative; width: fit-content; padding-bottom: 12px; letter-spacing: .01em; text-shadow: 0 5px 18px #4b2b7d14; }
+h1::after { content: ''; position: absolute; right: 0; bottom: 0; width: 58%; height: 5px; border-radius: 99px; background: linear-gradient(90deg, #b7d86a, #dff3ad); }
+.primary-button { border: 0; border-radius: 12px; padding: 14px 21px; color: #674493; background: linear-gradient(100deg, #b89af2, #d2ed9b); box-shadow: 0 9px 18px #a996d926; font-weight: 700; display: inline-flex; align-items: center; gap: 9px; transition: transform .2s ease, box-shadow .2s ease; }
+.primary-button:hover { transform: translateY(-1px); box-shadow: 0 12px 22px #a996d926; }
+.plus-icon { font-size: 23px; font-weight: 400; line-height: .7; }
+.calendar-panel { max-width: 1120px; margin: auto; padding: 30px clamp(16px, 4vw, 42px) 38px; border: 1px solid #ddd5f4; border-radius: 24px; background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(244,250,240,.9)); box-shadow: 0 20px 60px #8470a51a; }
+.calendar-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; text-align: center; }
+.calendar-heading h2 { font-family: 'Playfair Display', serif; font-size: 32px; color: #674493; }
+.month-kicker { color: #9ca550; font-size: 13px; font-weight: 700; }
+.month-arrow { width: 40px; height: 40px; border: 1px solid #d6cbea; border-radius: 50%; background: white; color: #4b2b7d; font-size: 23px; transition: transform .2s ease, box-shadow .2s ease; }
+.month-arrow:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(120, 95, 175, .12); }
+.month-arrow:disabled { opacity: .35; cursor: not-allowed; }
+.week-row, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.week-row { color: #9ca550; text-align: center; font-weight: 700; font-size: 14px; padding-bottom: 10px; }
+.day-cell { min-height: 100px; border-top: 1px solid #ece8f4; border-left: 1px solid #ece8f4; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+.day-cell:nth-child(7n + 1) { border-right: 1px solid #ece8f4; }
+.day-cell.empty { background: #fafbf9; }
+.day-cell.available { background: #f2eafb; }
+.day-cell.occupied { background: linear-gradient(120deg, #f5d5df, #e8d8f6); }
+.day-label { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.day-number { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; font-weight: 700; }
+.day-number.available, .day-number.occupied { color: inherit; background: transparent; }
+.day-cell.available .day-number { color: #674493; }
+.day-cell.occupied .day-number { color: #8b3658; }
+.today.available { box-shadow: inset 0 0 0 2px #9fc84c; }
+.hebrew-date { display: block; color: #8f829f; font-size: 11px; white-space: nowrap; }
+.event-pill { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px; padding: 3px 6px; background: linear-gradient(100deg, #c7a9f3, #eef8d5); color: #674493; font-size: 12px; }
+.delete-event-button { margin-top: 1px; border: 0; border-radius: 8px; padding: 5px 9px; color: #fff; background: #d95b8f; font-size: 12px; font-weight: 700; cursor: pointer; }
+.delete-event-button:hover { background: #bd3f73; }
+.footer-note { max-width: 1120px; margin: 18px auto 0; color: #777889; font-size: 13px; display: flex; align-items: center; gap: 20px; }
+.calendar-legend { justify-content: flex-start; flex-wrap: wrap; margin: 0 0 12px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.5); border: 1px solid rgba(203,195,237,.6); }
+.legend-item { display: inline-flex; align-items: center; gap: 7px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.available-dot { background: #d8c5f2; }
+.occupied-dot { background: linear-gradient(120deg, #f5d5df, #e8d8f6); }
+.excel-actions { display: inline-flex; align-items: center; gap: 7px; margin-right: auto; }
+.excel-button { border: 1px solid #d5c5ee; border-radius: 8px; padding: 5px 10px; color: #674493; background: #fff; font-size: 12px; transition: background .2s ease, transform .2s ease; }
+.excel-button:hover { background: #f2eafb; transform: translateY(-1px); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.modal-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: 18px; overflow-y: auto; direction: ltr; background: #30214b66; backdrop-filter: blur(5px); z-index: 5; }
+.password-card { width: min(100%, 390px); position: relative; direction: rtl; padding: 34px; border: 2px solid #ddd3ff; border-radius: 24px; background: linear-gradient(150deg, #f5f1ff 0%, #fff 45%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; }
+.password-card h2 { margin: 0 0 22px; color: #41216e; font-family: 'Playfair Display', serif; font-size: 28px; text-align: center; }
+.password-input-wrap { position: relative; display: block; }
+.password-input-wrap input { padding-left: 48px; }
+.password-visibility-button { position: absolute; left: 12px; top: 50%; display: grid; place-items: center; width: 30px; height: 30px; transform: translateY(-50%); border: 0; border-radius: 7px; color: #8056c4; background: transparent; font-size: 17px; line-height: 1; }
+.password-visibility-button:hover { background: #f2eafb; }
+.confirmation-card { width: min(100%, 420px); position: relative; direction: rtl; padding: 34px; border: 2px solid #f1c4d5; border-radius: 24px; background: linear-gradient(150deg, #fff5f8 0%, #fff 48%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; text-align: center; }
+.confirmation-icon { width: 42px; height: 42px; display: grid; place-items: center; margin: 0 auto 12px; border-radius: 50%; color: #fff; background: #d95b8f; font-size: 25px; font-weight: 800; }
+.confirmation-card h2 { margin: 0; color: #41216e; font-family: 'Playfair Display', serif; font-size: 28px; }
+.confirmation-card p { margin: 10px 0 24px; color: #806f8f; font-size: 15px; }
+.confirmation-actions { display: flex; justify-content: center; gap: 10px; }
+.cancel-button, .delete-confirm-button { min-width: 100px; border-radius: 10px; padding: 10px 18px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.cancel-button { border: 1px solid #d5c5ee; color: #674493; background: #fff; }
+.delete-confirm-button { border: 0; color: #fff; background: #d95b8f; }
+.cancel-button:hover { background: #f2eafb; }
+.delete-confirm-button:hover { background: #bd3f73; }
+.event-card { width: min(100%, 650px); max-height: calc(100vh - 36px); position: relative; overflow-y: auto; direction: rtl; padding: clamp(28px, 5vw, 48px); border: 2px solid #ddd3ff; border-radius: 30px; background: linear-gradient(150deg, #f5f1ff 0%, #fff 35%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; }
+.close-button { position: absolute; top: 18px; left: 22px; border: 0; background: transparent; color: #846e9d; font-size: 27px; line-height: 1; }
+.event-card-heading { text-align: center; margin-bottom: 28px; }
+.mini-spark { color: #b6d958; font-size: 22px; }
+.event-card-heading h2 { font-family: 'Playfair Display', serif; color: #41216e; font-size: clamp(25px, 4vw, 36px); margin-top: 5px; }
+.event-card-heading p { color: #8a7a9a; margin-top: 5px; }
+form { display: grid; gap: 19px; }
+label { display: grid; gap: 7px; color: #572481; font-size: 17px; font-weight: 700; }
+.field-error { color: #d95b8f; font-size: 12px; font-weight: 500; line-height: 1.2; }
+input, select { width: 100%; height: 57px; border: 1px solid #c9b7ff; border-radius: 14px; padding: 0 17px; outline: none; color: #4e405c; background: rgba(255,255,255,.76); }
+input:focus, select:focus { border-color: #8056c4; box-shadow: 0 0 0 3px #bba4eb44; }
+input::placeholder { color: #b1aab8; }
+.event-date-picker { border: 0; padding: 0; outline: none; background: transparent; }
+.event-date-picker:focus-within { border-color: #8056c4; box-shadow: 0 0 0 3px #bba4eb44; }
+.date-display { width: 100%; height: 57px; display: flex; align-items: center; justify-content: space-between; padding: 0 17px; border: 1px solid #c9b7ff; border-radius: 14px; color: #8a7a9a; background: rgba(255,255,255,.9); font-size: 17px; font-weight: 400; text-align: right; transition: border-color .2s, box-shadow .2s; }
+.date-display:hover, .date-display[aria-expanded="true"] { border-color: #8056c4; box-shadow: 0 0 0 3px #bba4eb44; }
+.date-display-arrow { color: #8056c4; font-size: 21px; line-height: 1; }
+.picker-calendar { margin-top: 10px; animation: picker-reveal .2s ease-out; }
+@keyframes picker-reveal { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.picker-header { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 14px 16px; border: 1px solid #ddd3ff; border-bottom: 0; border-radius: 25px 25px 0 0; color: #4b2b7d; background: linear-gradient(110deg, #f3edff, #f5ffe1); font-size: 20px; }
+.picker-arrow { width: 40px; height: 40px; border: 0; border-radius: 15px; background: linear-gradient(135deg, #9a69ef, #7a4dd3); color: white; font-size: 30px; line-height: .8; transition: transform .2s, box-shadow .2s, filter .2s; box-shadow: 0 10px 18px rgba(117, 64, 212, .18); }
+.picker-arrow:hover:not(:disabled) { filter: brightness(1.04); transform: translateY(-1px); }
+.picker-arrow:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+.picker-week-row, .picker-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.picker-week-row { padding: 12px 10px 8px; border-left: 1px solid #ddd3ff; border-right: 1px solid #ddd3ff; color: #4b2b7d; background: #fff; text-align: center; font-size: 13px; font-weight: 700; }
+.picker-grid { border: 1px solid #ddd3ff; border-top: 0; border-radius: 0 0 25px 25px; overflow: hidden; background: #fff; }
+.picker-day { min-width: 0; min-height: 72px; border: 0; border-left: 1px solid #eeeaf5; border-top: 1px solid #eeeaf5; border-radius: 0; background: #fff; color: #8c909a; font-size: 18px; font-weight: 700; text-align: right; padding: 9px 12px; transition: background .2s, color .2s; }
+.picker-gregorian, .picker-hebrew { display: block; }
+.picker-hebrew { margin-top: 3px; color: #b7aebe; font-size: 12px; font-weight: 400; }
+.picker-day.available { background: #f2eafb; color: #674493; }
+.picker-day:hover:not(:disabled), .picker-day.selected { color: #4b2b7d; background: #e9ddf6; }
+.picker-day.occupied { color: #9b3d5b; background: linear-gradient(120deg, #f5d5df, #e8d8f6); cursor: not-allowed; }
+.picker-day:disabled:not(.occupied) { color: #bdb8c2; background: #fbfbfc; cursor: not-allowed; }
+.picker-day.empty { background: transparent; }
+.selected-date-text { min-height: 20px; margin-top: 8px; color: #8a7a9a; font-size: 12px; font-weight: 500; text-align: center; }
+.submit-button { height: 58px; margin-top: 5px; border: 0; border-radius: 14px; color: white; background: linear-gradient(90deg, #c3a4ff, #c3e982); font-size: 17px; font-weight: 800; box-shadow: 0 12px 24px rgba(141, 84, 237, .18); transition: transform .2s ease, box-shadow .2s ease; }
+.submit-button:hover { transform: translateY(-1px); box-shadow: 0 16px 28px rgba(141, 84, 237, .2); }
+
+@media (max-width: 640px) {
+  .app-shell { padding: 20px 10px 24px; }
+  .topbar { align-items: flex-start; flex-direction: column; margin-bottom: 24px; }
+  .primary-button { width: 100%; justify-content: center; }
+  h1 { font-size: clamp(28px, 9vw, 38px); }
+  .calendar-panel { padding: 18px 5px 24px; border-radius: 18px; }
+  .calendar-heading { margin-bottom: 20px; }
+  .calendar-heading h2 { font-size: 27px; }
+  .month-arrow { width: 36px; height: 36px; }
+  .week-row { font-size: 12px; padding-bottom: 7px; }
+  .day-cell { min-height: 76px; padding: 6px 4px; gap: 5px; }
+  .day-label { align-items: flex-start; gap: 2px; }
+  .day-number { width: 22px; height: 22px; font-size: 12px; flex: 0 0 auto; }
+  .hebrew-date { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 8px; line-height: 1.2; }
+  .event-pill { font-size: 10px; padding: 2px 3px; }
+  .calendar-legend { margin-bottom: 7px; font-size: 12px; padding: 8px; }
+  .excel-actions { width: 100%; margin-top: 6px; margin-right: 0; justify-content: flex-start; }
+  .modal-backdrop { align-items: flex-start; padding: 8px; }
+  .event-card { width: 100%; max-height: calc(100vh - 16px); padding: 28px 16px 22px; border-radius: 22px; }
+  .event-card-heading { margin-bottom: 20px; }
+  .event-card-heading h2 { font-size: 26px; }
+  label { font-size: 16px; }
+  .picker-header { padding: 10px 8px; font-size: 17px; }
+  .picker-arrow { width: 35px; height: 35px; }
+  .picker-week-row { padding: 9px 4px 6px; font-size: 11px; }
+  .picker-day { min-height: 58px; padding: 6px 5px; font-size: 15px; }
+  .picker-hebrew { font-size: 9px; }
+}

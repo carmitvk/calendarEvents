@@ -1,0 +1,12 @@
+node_modules/
+dist/
+
+*.log
+build-output.txt
+
+*.xlsm
+admin-pwd.txt
+
+.env
+.env.*
+!.env.example
