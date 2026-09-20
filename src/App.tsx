@@ -214,7 +214,7 @@ function EventDatePicker({
               className={`picker-day ${isOccupied ? 'occupied' : 'available'} ${selectedDate === dateKey ? 'selected' : ''}`}
               key={dateKey}
               disabled={isDisabled}
-              onClick={() => selectDate(dateKey)}
+              onPointerUp={() => selectDate(dateKey)}
               title={isOccupied ? 'התאריך כבר תפוס' : undefined}
             >
               <span className="picker-gregorian">{date.getDate()}</span>
