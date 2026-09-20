@@ -238,6 +238,7 @@ function App() {
   const [dateValidationAttempted, setDateValidationAttempted] = useState(false)
   const [validationErrors, setValidationErrors] = useState({ title: false, className: false })
   const [isAdmin, setIsAdmin] = useState(false)
+  const [adminToken, setAdminToken] = useState('')
   const [deleteCandidateDate, setDeleteCandidateDate] = useState('')
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
   const [adminPassword, setAdminPassword] = useState('')
@@ -252,9 +253,21 @@ function App() {
   }
 
   useEffect(() => {
-    fetch('/api/workbook')
+    fetch('/xlsfile/תאריכיבתמצוות-תשפז.xlsm')
       .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Workbook not found')))
-      .then((data) => applyWorkbook(XLSX.read(data, { type: 'array', bookVBA: true }), 'תאריכיבתמצוות.xlsm'))
+      .then(async (data) => {
+        const workbook = XLSX.read(data, { type: 'array', bookVBA: true })
+        const workbookEvents = readEventsFromWorkbook(workbook)
+        const remoteResponse = await fetch('/api/events')
+        const remoteEvents = remoteResponse.ok ? await remoteResponse.json() as Array<EventItem & { deleted: boolean }> : []
+        const remoteByDate = new Map(remoteEvents.map((event) => [event.date, event]))
+        const mergedEvents = workbookEvents
+          .filter((event) => !remoteByDate.get(event.date)?.deleted)
+          .map((event) => remoteByDate.get(event.date) || event)
+        remoteEvents.filter((event) => !event.deleted && !workbookEvents.some((item) => item.date === event.date)).forEach((event) => mergedEvents.push(event))
+        setEvents(mergedEvents)
+        setWorkbookState({ workbook, fileName: 'תאריכיבתמצוות-תשפז.xlsm' })
+      })
       .catch(() => undefined)
   }, [])
 
@@ -291,14 +304,15 @@ function App() {
     const newEvent = { id: Date.now(), title, className, date }
     const nextEvents = [...events, newEvent]
     setEvents(nextEvents)
-    void fetch('/api/workbook/event', {
+    void fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newEvent),
     }).then((response) => {
-      if (!response.ok) return response.text().then((message) => { throw new Error(message || 'Workbook update failed') })
+      if (!response.ok) throw new Error('Event could not be saved')
     }).catch(() => {
-      window.alert('לא ניתן לעדכן את קובץ האקסל. ודא שהשרת פועל ושהקובץ אינו פתוח ב-Excel.')
+      setEvents(events)
+      window.alert('לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
     })
     setSelectedEventDate('')
     setIsFormOpen(false)
@@ -324,9 +338,10 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: adminPassword }),
     })
-    const result = response.ok ? await response.json() as { valid?: boolean } : { valid: false }
+    const result = response.ok ? await response.json() as { valid?: boolean; token?: string } : { valid: false }
     if (result.valid) {
       setIsAdmin(true)
+      setAdminToken(result.token || '')
       setIsPasswordDialogOpen(false)
       setAdminPassword('')
       setShowAdminPassword(false)
@@ -338,13 +353,13 @@ function App() {
 
   async function deleteEvent(date: string) {
     if (!isAdmin) return
-    const response = await fetch('/api/workbook/event', {
+    const response = await fetch('/api/events', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ date }),
     })
     if (!response.ok) {
-      window.alert('לא ניתן למחוק את האירוע מקובץ האקסל.')
+      window.alert('לא ניתן למחוק את האירוע.')
       return
     }
     setEvents((current) => current.filter((event) => event.date !== date))
