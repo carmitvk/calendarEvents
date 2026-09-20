@@ -194,7 +194,7 @@ function EventDatePicker({
         <span className="date-display-arrow">⌄</span>
       </button>
       {showError && <span className="field-error">שדה חובה למילוי</span>}
-      {isOpen && <div className="picker-calendar">
+      {isOpen && <div className="picker-calendar" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
         <div className="picker-header">
         <button type="button" className="picker-arrow" onClick={() => moveMonth(1)} aria-label="חודש הבא" title="חודש הבא">‹</button>
         <strong>{monthNames[pickerMonth.getMonth()]} {pickerMonth.getFullYear()}</strong>
@@ -214,7 +214,7 @@ function EventDatePicker({
               className={`picker-day ${isOccupied ? 'occupied' : 'available'} ${selectedDate === dateKey ? 'selected' : ''}`}
               key={dateKey}
               disabled={isDisabled}
-              onPointerUp={() => selectDate(dateKey)}
+              onClick={() => selectDate(dateKey)}
               title={isOccupied ? 'התאריך כבר תפוס' : undefined}
             >
               <span className="picker-gregorian">{date.getDate()}</span>
