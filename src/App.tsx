@@ -219,11 +219,6 @@ function EventDatePicker({
                 event.stopPropagation()
                 selectDate(dateKey)
               }}
-              onTouchEnd={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                selectDate(dateKey)
-              }}
               onClick={() => selectDate(dateKey)}
               title={isOccupied ? 'התאריך כבר תפוס' : undefined}
             >
@@ -588,7 +583,7 @@ function App() {
       </section>
 
       {isFormOpen && (
-        <div className="modal-backdrop" role="presentation">
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsFormOpen(false)}>
           <section className="event-card" role="dialog" aria-modal="true" aria-labelledby="event-title">
             <button className="close-button" onClick={() => setIsFormOpen(false)} aria-label="סגירת הטופס">×</button>
             <div className="event-card-heading">
