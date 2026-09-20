@@ -214,6 +214,11 @@ function EventDatePicker({
               className={`picker-day ${isOccupied ? 'occupied' : 'available'} ${selectedDate === dateKey ? 'selected' : ''}`}
               key={dateKey}
               disabled={isDisabled}
+              onPointerUp={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                selectDate(dateKey)
+              }}
               onClick={() => selectDate(dateKey)}
               title={isOccupied ? 'התאריך כבר תפוס' : undefined}
             >
