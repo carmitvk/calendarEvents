@@ -253,20 +253,11 @@ function App() {
   }
 
   useEffect(() => {
-    fetch('/xlsfile/תאריכיבתמצוות-תשפז.xlsm')
+    fetch('/api/workbook')
       .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Workbook not found')))
-      .then(async (data) => {
+      .then((data) => {
         const workbook = XLSX.read(data, { type: 'array', bookVBA: true })
-        const workbookEvents = readEventsFromWorkbook(workbook)
-        const remoteResponse = await fetch('/api/events')
-        const remoteEvents = remoteResponse.ok ? await remoteResponse.json() as Array<EventItem & { deleted: boolean }> : []
-        const remoteByDate = new Map(remoteEvents.map((event) => [event.date, event]))
-        const mergedEvents = workbookEvents
-          .filter((event) => !remoteByDate.get(event.date)?.deleted)
-          .map((event) => remoteByDate.get(event.date) || event)
-        remoteEvents.filter((event) => !event.deleted && !workbookEvents.some((item) => item.date === event.date)).forEach((event) => mergedEvents.push(event))
-        setEvents(mergedEvents)
-        setWorkbookState({ workbook, fileName: 'תאריכיבתמצוות-תשפז.xlsm' })
+        applyWorkbook(workbook, 'תאריכיבתמצוות.xlsm')
       })
       .catch(() => undefined)
   }, [])
@@ -304,7 +295,7 @@ function App() {
     const newEvent = { id: Date.now(), title, className, date }
     const nextEvents = [...events, newEvent]
     setEvents(nextEvents)
-    void fetch('/api/events', {
+    void fetch('/api/workbook', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newEvent),
@@ -353,7 +344,7 @@ function App() {
 
   async function deleteEvent(date: string) {
     if (!isAdmin) return
-    const response = await fetch('/api/events', {
+    const response = await fetch('/api/workbook', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ date }),
