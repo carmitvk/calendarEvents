@@ -258,12 +258,9 @@ function App() {
   }
 
   useEffect(() => {
-    fetch('/api/workbook')
-      .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Workbook not found')))
-      .then((data) => {
-        const workbook = XLSX.read(data, { type: 'array', bookVBA: true })
-        applyWorkbook(workbook, 'תאריכיבתמצוות.xlsm')
-      })
+    fetch('/api/events')
+      .then((response) => response.ok ? response.json() as Promise<EventItem[]> : Promise.reject(new Error('Events not found')))
+      .then((loadedEvents) => setEvents(loadedEvents.map((event, index) => ({ ...event, id: index + 1 }))))
       .catch(() => undefined)
   }, [])
 
@@ -300,7 +297,7 @@ function App() {
     const newEvent = { id: Date.now(), title, className, date }
     const nextEvents = [...events, newEvent]
     setEvents(nextEvents)
-    void fetch('/api/workbook', {
+    void fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newEvent),
@@ -349,7 +346,7 @@ function App() {
 
   async function deleteEvent(date: string) {
     if (!isAdmin) return
-    const response = await fetch('/api/workbook', {
+    const response = await fetch('/api/events', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ date }),
