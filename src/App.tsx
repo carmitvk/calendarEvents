@@ -111,7 +111,13 @@ function normalizeExcelDate(value: unknown) {
   const text = String(value || '').trim()
   if (!text) return ''
   const match = text.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/)
-  if (match) return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
+  if (match) {
+    const first = Number(match[1])
+    const second = Number(match[2])
+    if (first > 12 && second <= 12) return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
+    if (second > 12 && first <= 12) return `${match[3]}-${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`
+    return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
+  }
   return text.slice(0, 10)
 }
 
