@@ -19,6 +19,7 @@ function fillMissingGregorianDates() {
     const hebrewValue = values[row][hebrewColumn];
     if (gregorianValue || !(hebrewValue instanceof Date)) continue;
     sheet.getRange(row + 1, gregorianColumn + 1)
+      .setNumberFormat('@')
       .setValue(formatDateText(hebrewValue));
     filled += 1;
   }
@@ -48,7 +49,9 @@ function doPost(request) {
       const row = values.slice(headerRow + 1).findIndex(item => toDateKey(item[dateColumn]) === event.date);
       const rowNumber = row >= 0 ? headerRow + 2 + row : sheet.getLastRow() + 1;
       sheet.getRange(rowNumber, dateColumn + 1)
-        .setValue(formatDateText(new Date(event.date + 'T12:00:00')));
+        .setNumberFormat('@')
+        .setValue(formatDateText(new Date(event.date + 'T12:00:00')))
+        .setNumberFormat('@');
       sheet.getRange(rowNumber, titleColumn + 1).setValue(event.title || '');
       sheet.getRange(rowNumber, classColumn + 1).setValue(event.className || '');
       return json({ ok: true });
