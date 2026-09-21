@@ -34,6 +34,11 @@ function toDateKey(date: Date) {
   return `${year}-${month}-${day}`
 }
 
+function formatDateForDisplay(dateKey: string) {
+  const [year, month, day] = dateKey.split('-')
+  return year && month && day ? `${day}/${month}/${year}` : dateKey
+}
+
 function toHebrewNumeral(number: number) {
   const units = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט']
   const tens = ['', 'י', 'כ', 'ל']
@@ -190,7 +195,7 @@ function EventDatePicker({
         required
       />
       <button type="button" className="date-display" onClick={() => setIsOpen((current) => !current)} aria-expanded={isOpen}>
-        <span>{selectedDate ? selectedDate : 'בחרי תאריך'}</span>
+        <span>{selectedDate ? formatDateForDisplay(selectedDate) : 'בחרי תאריך'}</span>
         <span className="date-display-arrow">⌄</span>
       </button>
       {showError && <span className="field-error">שדה חובה למילוי</span>}
