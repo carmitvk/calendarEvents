@@ -1,87 +1,76 @@
-import { isValidAdminToken } from './admin/login'
+import * as XLSX from 'xlsx'
 
-type VercelRequest = {
-  method?: string
-  body?: unknown
-  headers?: Record<string, string | undefined>
+type VercelRequest = { method?: string; body?: unknown }
+type VercelResponse = { status: (code: number) => VercelResponse; json: (body: unknown) => void }
+
+const spreadsheetId = '1V3wMw6tGR1XgiHqOov-nPGG-6CXL-e8o3qvA4uxTX5M'
+const sheetGid = '2108382964'
+
+function normalizeDate(value: unknown) {
+  if (value instanceof Date) return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
+  if (typeof value === 'number') {
+    const date = XLSX.SSF.parse_date_code(value)
+    return date ? `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}` : ''
+  }
+  const text = String(value || '').trim()
+  const match = text.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/)
+  return match ? `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}` : text.slice(0, 10)
 }
 
-type VercelResponse = {
-  status: (code: number) => VercelResponse
-  json: (body: unknown) => void
+async function loadSheetEvents() {
+  const response = await fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=xlsx&gid=${sheetGid}`)
+  if (!response.ok) throw new Error(`Google Sheet download failed: ${response.status}`)
+  const workbook = XLSX.read(await response.arrayBuffer(), { type: 'array' })
+  const sheet = workbook.Sheets[workbook.SheetNames[0]]
+  if (!sheet) throw new Error('Google Sheet tab not found')
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: true })
+  const headerIndex = rows.findIndex((row) => row.some((cell) => String(cell || '').includes('תאריך לועזי')))
+  if (headerIndex < 0) throw new Error('Google Sheet header not found')
+  const headers = rows[headerIndex].map((cell) => String(cell || ''))
+  const dateIndex = headers.findIndex((header) => header.includes('תאריך לועזי'))
+  const titleIndex = headers.findIndex((header) => header.includes('שם החוגגת'))
+  const classIndex = headers.findIndex((header) => header.includes('כיתה'))
+  return rows.slice(headerIndex + 1).map((row, index) => ({
+    id: index + 1,
+    date: normalizeDate(row[dateIndex]),
+    title: String(row[titleIndex] || '').trim(),
+    className: String(row[classIndex] || '').trim(),
+  })).filter((event) => event.date && event.title)
 }
 
-type EventRow = {
-  date: string
-  title: string
-  class_name: string
-}
-
-function configuration() {
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error('Supabase environment variables are missing')
-  return { url, key }
-}
-
-async function supabaseRequest(path: string, init: RequestInit = {}) {
-  const { url, key } = configuration()
-  return fetch(`${url}/rest/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      ...(init.headers || {}),
-    },
+async function forwardWrite(payload: unknown) {
+  const scriptUrl = process.env.GOOGLE_SHEETS_SCRIPT_URL
+  const token = process.env.GOOGLE_SHEETS_SCRIPT_TOKEN
+  if (!scriptUrl || !token) throw new Error('Google Sheets write connection is not configured')
+  const response = await fetch(scriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...(payload as object), token }),
   })
+  if (!response.ok) throw new Error(`Google Sheets update failed: ${response.status}`)
+  const result = await response.json() as { ok?: boolean; error?: string }
+  if (!result.ok) throw new Error(result.error || 'Google Sheets update failed')
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   try {
     if (request.method === 'GET') {
-      const result = await supabaseRequest('calendar_events?select=date,title,class_name&order=date.asc')
-      if (!result.ok) throw new Error(await result.text())
-      const rows = await result.json() as EventRow[]
-      response.status(200).json(rows.map((row) => ({ date: row.date, title: row.title, className: row.class_name })))
+      response.status(200).json(await loadSheetEvents())
       return
     }
-
-    const payload = request.body as { date?: string; title?: string; className?: string } | undefined
-    if (!payload?.date) {
-      response.status(400).json({ error: 'Missing event date' })
-      return
-    }
-
     if (request.method === 'POST') {
-      if (!payload.title || !payload.className) {
-        response.status(400).json({ error: 'Missing event data' })
-        return
-      }
-      const result = await supabaseRequest('calendar_events', {
-        method: 'POST',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ date: payload.date, title: payload.title, class_name: payload.className }),
-      })
-      if (!result.ok) throw new Error(await result.text())
+      await forwardWrite({ action: 'upsert', event: request.body })
       response.status(201).json({ ok: true })
       return
     }
-
     if (request.method === 'DELETE') {
-      const token = request.headers?.authorization?.replace(/^Bearer\s+/i, '')
-      if (!isValidAdminToken(token)) {
-        response.status(401).json({ error: 'Admin authorization required' })
-        return
-      }
-      const result = await supabaseRequest(`calendar_events?date=eq.${encodeURIComponent(payload.date)}`, { method: 'DELETE' })
-      if (!result.ok) throw new Error(await result.text())
+      const payload = request.body as { date?: string } | undefined
+      await forwardWrite({ action: 'delete', date: payload?.date })
       response.status(200).json({ ok: true })
       return
     }
-
     response.status(405).json({ error: 'Method not allowed' })
   } catch (error) {
-    response.status(500).json({ error: error instanceof Error ? error.message : 'Unexpected server error' })
+    response.status(500).json({ error: error instanceof Error ? error.message : 'Unexpected error' })
   }
 }
