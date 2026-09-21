@@ -19,13 +19,12 @@ function fillMissingGregorianDates() {
     const hebrewValue = values[row][hebrewColumn];
     if (gregorianValue || !(hebrewValue instanceof Date)) continue;
     sheet.getRange(row + 1, gregorianColumn + 1)
-      .setValue(hebrewValue)
-      .setNumberFormat('dd/mm/yyyy');
+      .setValue(formatDateText(hebrewValue));
     filled += 1;
   }
   if (values.length > headerRow + 1) {
     sheet.getRange(headerRow + 2, gregorianColumn + 1, values.length - headerRow - 1, 1)
-      .setNumberFormat('dd/mm/yyyy');
+      .setNumberFormat('@');
   }
   Logger.log('Filled Gregorian dates: ' + filled);
 }
@@ -49,8 +48,7 @@ function doPost(request) {
       const row = values.slice(headerRow + 1).findIndex(item => toDateKey(item[dateColumn]) === event.date);
       const rowNumber = row >= 0 ? headerRow + 2 + row : sheet.getLastRow() + 1;
       sheet.getRange(rowNumber, dateColumn + 1)
-        .setValue(new Date(event.date + 'T12:00:00'))
-        .setNumberFormat('dd/mm/yyyy');
+        .setValue(formatDateText(new Date(event.date + 'T12:00:00')));
       sheet.getRange(rowNumber, titleColumn + 1).setValue(event.title || '');
       sheet.getRange(rowNumber, classColumn + 1).setValue(event.className || '');
       return json({ ok: true });
@@ -72,6 +70,12 @@ function doPost(request) {
 function toDateKey(value) {
   if (!(value instanceof Date)) return String(value || '').slice(0, 10);
   return Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+function formatDateText(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) throw new Error('Invalid Gregorian date');
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'dd/MM/yyyy');
 }
 
 function json(value) {
