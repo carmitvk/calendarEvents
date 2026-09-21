@@ -15,9 +15,8 @@ function fillMissingGregorianDates() {
 
   let filled = 0;
   for (let row = headerRow + 1; row < values.length; row += 1) {
-    const gregorianValue = values[row][gregorianColumn];
     const hebrewValue = values[row][hebrewColumn];
-    if (gregorianValue || !(hebrewValue instanceof Date)) continue;
+    if (!(hebrewValue instanceof Date)) continue;
     sheet.getRange(row + 1, gregorianColumn + 1)
       .setNumberFormat('@')
       .setValue(formatDateText(hebrewValue));
@@ -40,6 +39,7 @@ function doPost(request) {
     if (headerRow < 0) return json({ ok: false, error: 'Header row not found' });
     const header = values[headerRow].map(String);
     const dateColumn = header.findIndex(value => value.includes('תאריך לועזי'));
+    const hebrewColumn = header.findIndex(value => value.includes('תאריך עברי'));
     const titleColumn = header.findIndex(value => value.includes('שם החוגגת'));
     const classColumn = header.findIndex(value => value.includes('כיתה'));
     if (dateColumn < 0 || titleColumn < 0 || classColumn < 0) return json({ ok: false, error: 'Required columns not found' });
@@ -48,10 +48,17 @@ function doPost(request) {
       const event = payload.event || {};
       const row = values.slice(headerRow + 1).findIndex(item => toDateKey(item[dateColumn]) === event.date);
       const rowNumber = row >= 0 ? headerRow + 2 + row : sheet.getLastRow() + 1;
-      sheet.getRange(rowNumber, dateColumn + 1)
-        .setNumberFormat('@')
-        .setValue(formatDateText(new Date(event.date + 'T12:00:00')))
-        .setNumberFormat('@');
+      if (row < 0) {
+        if (hebrewColumn >= 0) {
+          sheet.getRange(rowNumber - 1, hebrewColumn + 1)
+            .copyTo(sheet.getRange(rowNumber, hebrewColumn + 1), SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+          sheet.getRange(rowNumber, hebrewColumn + 1).setValue(new Date(event.date + 'T12:00:00'));
+        }
+        sheet.getRange(rowNumber, dateColumn + 1)
+          .setNumberFormat('@')
+          .setValue(formatDateText(new Date(event.date + 'T12:00:00')))
+          .setNumberFormat('@');
+      }
       sheet.getRange(rowNumber, titleColumn + 1).setValue(event.title || '');
       sheet.getRange(rowNumber, classColumn + 1).setValue(event.className || '');
       return json({ ok: true });
@@ -71,8 +78,12 @@ function doPost(request) {
 }
 
 function toDateKey(value) {
-  if (!(value instanceof Date)) return String(value || '').slice(0, 10);
-  return Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  if (value instanceof Date) return Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const text = String(value || '').trim();
+  const match = text.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  return match
+    ? `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
+    : text.slice(0, 10);
 }
 
 function formatDateText(value) {
