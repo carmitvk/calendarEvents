@@ -186,6 +186,7 @@ function EventDatePicker({
   }
 
   function selectDate(date: string) {
+    if (events.some((event) => event.date === date)) return
     onSelect(date)
     dateInputRef.current?.setCustomValidity('')
     setIsOpen(false)
