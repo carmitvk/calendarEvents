@@ -90,6 +90,7 @@ h1::after { content: ''; position: absolute; right: 0; bottom: 0; width: 58%; he
 .event-details-list dt { color: #806f8f; font-weight: 700; }
 .event-details-list dd { margin: 0; color: #41216e; font-weight: 700; text-align: left; }
 .close-button { position: absolute; top: 18px; left: 22px; border: 0; background: transparent; color: #846e9d; font-size: 27px; line-height: 1; }
+.event-details-close-button { left: auto; right: 22px; }
 .event-card-heading { text-align: center; margin-bottom: 28px; }
 .mini-spark { color: #b6d958; font-size: 22px; }
 .event-card-heading h2 { font-family: 'Playfair Display', serif; color: #41216e; font-size: clamp(25px, 4vw, 36px); margin-top: 5px; }
