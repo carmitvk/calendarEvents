@@ -482,11 +482,12 @@ function App() {
       <header className="topbar">
         <div className="brand-block">
           <button
-            className={`eyebrow ${isAdmin ? 'admin-active' : ''}`}
+            className={`brand-logo-button ${isAdmin ? 'admin-active' : ''}`}
             type="button"
             onClick={requestAdminAccess}
             title={isAdmin ? 'יציאה ממצב מנהל' : 'כניסה למצב מנהל'}
-          >Carmit Vaknin Software</button>
+            aria-label={isAdmin ? 'יציאה ממצב מנהל' : 'כניסה למצב מנהל'}
+          ><img src="/logo.png" alt="Carmit Vaknin Software" /></button>
           <h1>לוח אירועים שנת בת מצווה</h1>
         </div>
         <button className="primary-button" onClick={() => { setSelectedEventDate(''); setIsFormOpen(true) }}>
