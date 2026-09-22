@@ -646,18 +646,21 @@ function App() {
               </label>
               <label>
                 כיתה
-                <select
-                  name="className"
-                  defaultValue=""
-                  required
-                  onChange={() => setValidationErrors((current) => ({ ...current, className: false }))}
-                >
-                  <option value="" disabled>בחר כיתה</option>
-                  <option value="ו3">ו3</option>
-                  <option value="ו4">ו4</option>
-                  <option value="שכבתי">שכבתי</option>
-                  <option value="בית ספרי">בית ספרי</option>
-                </select>
+                <span className="class-select-wrap">
+                  <select
+                    name="className"
+                    defaultValue=""
+                    required
+                    onChange={() => setValidationErrors((current) => ({ ...current, className: false }))}
+                  >
+                    <option value="" disabled>בחר כיתה</option>
+                    <option value="ו3">ו3</option>
+                    <option value="ו4">ו4</option>
+                    <option value="שכבתי">שכבתי</option>
+                    <option value="בית ספרי">בית ספרי</option>
+                  </select>
+                  <span className="class-select-arrow">⌄</span>
+                </span>
                 {validationErrors.className && <span className="field-error">שדה חובה למילוי</span>}
               </label>
               <label>
