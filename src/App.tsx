@@ -264,6 +264,7 @@ function App() {
   const [passwordError, setPasswordError] = useState(false)
   const [deleteConfirmDate, setDeleteConfirmDate] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const pendingDeletedDates = useRef(new Set<string>())
 
   function applyWorkbook(workbook: XLSX.WorkBook, fileName: string) {
     setEvents(readEventsFromWorkbook(workbook))
@@ -274,7 +275,15 @@ function App() {
     function loadSharedEvents() {
       return fetch(`/api/events?t=${Date.now()}`, { cache: 'no-store' })
       .then((response) => response.ok ? response.json() as Promise<EventItem[]> : Promise.reject(new Error('Events not found')))
-      .then((loadedEvents) => setEvents(loadedEvents.map((event, index) => ({ ...event, id: index + 1 }))))
+      .then((loadedEvents) => {
+        const loadedDates = new Set(loadedEvents.map((event) => event.date))
+        pendingDeletedDates.current.forEach((date) => {
+          if (!loadedDates.has(date)) pendingDeletedDates.current.delete(date)
+        })
+        setEvents(loadedEvents
+          .filter((event) => !pendingDeletedDates.current.has(event.date))
+          .map((event, index) => ({ ...event, id: index + 1 })))
+      })
       .catch(() => undefined)
     }
 
@@ -366,6 +375,7 @@ function App() {
   async function deleteEvent(date: string) {
     if (!isAdmin) return
     const previousEvents = events
+    pendingDeletedDates.current.add(date)
     setEvents((current) => current.filter((event) => event.date !== date))
     setDeleteCandidateDate('')
     setDeleteConfirmDate('')
@@ -374,7 +384,10 @@ function App() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ date }),
     })
-    if (!response.ok) setEvents(previousEvents)
+    if (!response.ok) {
+      pendingDeletedDates.current.delete(date)
+      setEvents(previousEvents)
+    }
   }
 
   function loadWorkbook(event: ChangeEvent<HTMLInputElement>) {
