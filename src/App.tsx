@@ -260,7 +260,6 @@ function App() {
   const [deleteCandidateDate, setDeleteCandidateDate] = useState('')
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
   const [adminPassword, setAdminPassword] = useState('')
-  const [showAdminPassword, setShowAdminPassword] = useState(false)
   const [passwordError, setPasswordError] = useState(false)
   const [deleteConfirmDate, setDeleteConfirmDate] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -347,7 +346,6 @@ function App() {
       return
     }
     setAdminPassword('')
-    setShowAdminPassword(false)
     setPasswordError(false)
     setIsPasswordDialogOpen(true)
   }
@@ -365,7 +363,6 @@ function App() {
       setAdminToken(result.token || '')
       setIsPasswordDialogOpen(false)
       setAdminPassword('')
-      setShowAdminPassword(false)
       setPasswordError(false)
       return
     }
@@ -508,19 +505,12 @@ function App() {
                 סיסמה
                 <span className="password-input-wrap">
                   <input
-                    type={showAdminPassword ? 'text' : 'password'}
+                    type="password"
                     value={adminPassword}
                     autoFocus
                     onChange={(event) => { setAdminPassword(event.target.value); setPasswordError(false) }}
                     required
                   />
-                  <button
-                    type="button"
-                    className="password-visibility-button"
-                    onClick={() => setShowAdminPassword((current) => !current)}
-                    aria-label={showAdminPassword ? 'הסתרת סיסמה' : 'הצגת סיסמה'}
-                    title={showAdminPassword ? 'הסתרת סיסמה' : 'הצגת סיסמה'}
-                  >👁</button>
                 </span>
               </label>
               {passwordError && <span className="field-error">סיסמה שגויה</span>}
