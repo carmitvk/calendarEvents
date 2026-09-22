@@ -75,7 +75,7 @@ h1::after { content: ''; position: absolute; right: 0; bottom: 0; width: 58%; he
 .password-input-wrap { position: relative; display: block; }
 .password-input-wrap input { padding-left: 48px; }
 .password-card .password-input-wrap input { min-height: 48px; padding-top: 10px; padding-bottom: 10px; border-radius: 12px; }
-.password-card .password-input-wrap input { width: 92%; margin-inline: auto; }
+.password-card .password-input-wrap input { width: 92%; margin-inline: auto; display: block; }
 .password-visibility-button { position: absolute; left: 12px; top: 50%; display: grid; place-items: center; width: 30px; height: 30px; transform: translateY(-50%); border: 0; border-radius: 7px; color: #8056c4; background: transparent; font-size: 17px; line-height: 1; }
 .password-visibility-button:hover { background: #f2eafb; }
 .confirmation-card { width: min(100%, 420px); position: relative; direction: rtl; padding: 34px; border: 2px solid #f1c4d5; border-radius: 24px; background: linear-gradient(150deg, #fff5f8 0%, #fff 48%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; text-align: center; }
@@ -139,7 +139,7 @@ input::placeholder { color: #b1aab8; }
 .selected-date-text { min-height: 20px; margin-top: 8px; color: #8a7a9a; font-size: 12px; font-weight: 500; text-align: center; }
 .submit-button { height: 58px; margin-top: 5px; border: 0; border-radius: 14px; color: white; background: linear-gradient(90deg, #c3a4ff, #c3e982); font-size: 17px; font-weight: 800; box-shadow: 0 12px 24px rgba(141, 84, 237, .18); transition: transform .2s ease, box-shadow .2s ease; }
 .password-card .submit-button { height: 50px; border-radius: 12px; font-size: 16px; font-weight: 700; box-shadow: 0 8px 18px rgba(141, 84, 237, .14); }
-.password-card .submit-button { width: 92%; margin-inline: auto; }
+.password-card .submit-button { width: 92%; margin-inline: auto; display: block; }
 .submit-button:hover { transform: translateY(-1px); box-shadow: 0 16px 28px rgba(141, 84, 237, .2); }
 
 @media (max-width: 640px) {
