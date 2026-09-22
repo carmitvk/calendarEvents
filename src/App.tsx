@@ -226,7 +226,7 @@ function EventDatePicker({
               className={`picker-day ${isOccupied ? 'occupied' : 'available'} ${selectedDate === dateKey ? 'selected' : ''}`}
               key={dateKey}
               disabled={isDisabled}
-              onPointerUp={(event) => {
+              onTouchEnd={(event) => {
                 event.preventDefault()
                 event.stopPropagation()
                 selectDate(dateKey)
