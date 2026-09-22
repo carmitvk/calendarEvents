@@ -523,7 +523,7 @@ function App() {
       {deleteConfirmDate && (
         <div className="modal-backdrop delete-confirm-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteConfirmDate('')}>
           <section className="confirmation-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-            <button className="close-button" type="button" onClick={() => setDeleteConfirmDate('')} aria-label="סגירת חלון האישור">×</button>
+            <button className="close-button delete-confirm-close-button" type="button" onClick={() => setDeleteConfirmDate('')} aria-label="סגירת חלון האישור">×</button>
             <div className="confirmation-icon">!</div>
             <h2 id="delete-title">מחיקת אירוע</h2>
             <p>האם למחוק את האירוע מהלוח ומהאקסל?</p>
