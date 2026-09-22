@@ -488,7 +488,7 @@ function App() {
             title={isAdmin ? 'יציאה ממצב מנהל' : 'כניסה למצב מנהל'}
             aria-label={isAdmin ? 'יציאה ממצב מנהל' : 'כניסה למצב מנהל'}
           ><img src="/logo.png" alt="Carmit Vaknin Software" /></button>
-          <h1>לוח אירועים שנת בת מצווה</h1>
+          <h1 className={isAdmin ? 'admin-mode-title' : ''}>לוח אירועים שנת בת מצווה</h1>
         </div>
         <button className="primary-button" onClick={() => { setSelectedEventDate(''); setIsFormOpen(true) }}>
           <span className="plus-icon">+</span>

@@ -29,6 +29,7 @@ h1, h2, p { margin: 0; }
 .page-title, h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4vw, 48px); line-height: 1.1; color: #674493; }
 h1 { position: relative; width: fit-content; padding-bottom: 12px; letter-spacing: .01em; text-shadow: 0 5px 18px #4b2b7d14; }
 h1::after { content: ''; position: absolute; right: 0; bottom: 0; width: 58%; height: 5px; border-radius: 99px; background: linear-gradient(90deg, #b7d86a, #dff3ad); }
+h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3); }
 .primary-button { border: 0; border-radius: 12px; padding: 14px 21px; color: #674493; background: linear-gradient(100deg, #b89af2, #d2ed9b); box-shadow: 0 9px 18px #a996d926; font-weight: 700; display: inline-flex; align-items: center; gap: 9px; transition: transform .2s ease, box-shadow .2s ease; }
 .primary-button:hover { transform: translateY(-1px); box-shadow: 0 12px 22px #a996d926; }
 .plus-icon { font-size: 23px; font-weight: 400; line-height: .7; }
