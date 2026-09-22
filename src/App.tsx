@@ -499,7 +499,7 @@ function App() {
       </header>
 
       {isPasswordDialogOpen && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsPasswordDialogOpen(false)}>
+        <div className="modal-backdrop password-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsPasswordDialogOpen(false)}>
           <section className="password-card" role="dialog" aria-modal="true" aria-labelledby="password-title">
             <button className="close-button" type="button" onClick={() => setIsPasswordDialogOpen(false)} aria-label="סגירת חלון הסיסמה">×</button>
             <h2 id="password-title">הכנס סיסמה</h2>
