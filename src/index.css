@@ -73,11 +73,10 @@ h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3
 .password-backdrop .password-close-button { top: 18px; left: auto; right: 22px; color: #8060a2; }
 .password-backdrop .password-card { border: 0; background: linear-gradient(145deg, rgba(230, 247, 220, .98), rgba(232, 220, 246, .98) 52%, rgba(244, 224, 236, .98)); box-shadow: 0 24px 70px rgba(73, 38, 91, .2); }
 .password-card h2 { margin: 0 0 22px; color: #41216e; font-family: 'Playfair Display', serif; font-size: 28px; text-align: center; }
-.password-input-wrap { position: relative; display: block; }
-.password-input-wrap input { padding-left: 48px; }
+.password-input-wrap { position: relative; display: block; width: 92%; margin-inline: auto; }
+.password-input-wrap input { width: 100%; padding-left: 48px; }
 .password-card .password-input-wrap input { min-height: 44px; padding-top: 8px; padding-bottom: 8px; border-radius: 11px; }
-.password-card .password-input-wrap input { width: 92%; margin-inline: auto; display: block; }
-.password-visibility-button { position: absolute; left: 5px; top: 50%; display: grid; place-items: center; width: 30px; height: 30px; transform: translateY(-50%); border: 0; border-radius: 7px; color: #8056c4; background: transparent; font-size: 17px; line-height: 1; }
+.password-visibility-button { position: absolute; left: 1px; top: 50%; display: grid; place-items: center; width: 30px; height: 30px; transform: translateY(-50%); border: 0; border-radius: 7px; color: #8056c4; background: transparent; font-size: 17px; line-height: 1; }
 .password-visibility-button:hover { background: #f2eafb; }
 .confirmation-card { width: min(100%, 420px); position: relative; direction: rtl; padding: 34px; border: 2px solid #f1c4d5; border-radius: 24px; background: linear-gradient(150deg, #fff5f8 0%, #fff 48%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; text-align: center; }
 .confirmation-card { border: 0; background: linear-gradient(145deg, rgba(230, 247, 220, .98), rgba(232, 220, 246, .98) 52%, rgba(244, 224, 236, .98)); box-shadow: 0 24px 70px rgba(73, 38, 91, .2); }
