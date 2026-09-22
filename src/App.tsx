@@ -358,18 +358,20 @@ function App() {
 
   async function deleteEvent(date: string) {
     if (!isAdmin) return
+    const previousEvents = events
+    setEvents((current) => current.filter((event) => event.date !== date))
+    setDeleteCandidateDate('')
+    setDeleteConfirmDate('')
     const response = await fetch('/api/events', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ date }),
     })
     if (!response.ok) {
+      setEvents(previousEvents)
       window.alert('לא ניתן למחוק את האירוע.')
       return
     }
-    setEvents((current) => current.filter((event) => event.date !== date))
-    setDeleteCandidateDate('')
-    setDeleteConfirmDate('')
   }
 
   function loadWorkbook(event: ChangeEvent<HTMLInputElement>) {
