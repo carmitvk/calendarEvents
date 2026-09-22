@@ -367,11 +367,7 @@ function App() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ date }),
     })
-    if (!response.ok) {
-      setEvents(previousEvents)
-      window.alert('לא ניתן למחוק את האירוע.')
-      return
-    }
+    if (!response.ok) setEvents(previousEvents)
   }
 
   function loadWorkbook(event: ChangeEvent<HTMLInputElement>) {
