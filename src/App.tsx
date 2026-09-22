@@ -531,7 +531,7 @@ function App() {
       )}
 
       {deleteConfirmDate && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteConfirmDate('')}>
+        <div className="modal-backdrop delete-confirm-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteConfirmDate('')}>
           <section className="confirmation-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
             <button className="close-button" type="button" onClick={() => setDeleteConfirmDate('')} aria-label="סגירת חלון האישור">×</button>
             <div className="confirmation-icon">!</div>
