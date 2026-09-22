@@ -81,10 +81,10 @@ h1::after { content: ''; position: absolute; right: 0; bottom: 0; width: 58%; he
 .confirmation-card p { margin: 10px 0 24px; color: #806f8f; font-size: 15px; }
 .confirmation-actions { display: flex; justify-content: center; gap: 10px; }
 .cancel-button, .delete-confirm-button { min-width: 100px; border-radius: 10px; padding: 10px 18px; font-size: 15px; font-weight: 700; cursor: pointer; }
-.cancel-button { border: 1px solid #d5c5ee; color: #674493; background: #fff; }
-.delete-confirm-button { border: 0; color: #fff; background: #d95b8f; }
-.cancel-button:hover { background: #f2eafb; }
-.delete-confirm-button:hover { background: #bd3f73; }
+.cancel-button { border: 1px solid #b7d4b0; color: #4f477f; background: #e4f0d8; }
+.delete-confirm-button { border: 0; color: #54356f; background: #e8c6df; }
+.cancel-button:hover { background: #d2e8c7; }
+.delete-confirm-button:hover { background: #d9add0; }
 .event-card { width: min(100%, 650px); max-height: calc(100vh - 36px); position: relative; overflow-y: auto; direction: rtl; padding: clamp(28px, 5vw, 48px); border: 2px solid #ddd3ff; border-radius: 30px; background: linear-gradient(150deg, #f5f1ff 0%, #fff 35%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; }
 .event-details-card { width: min(100%, 460px); position: relative; direction: rtl; padding: 34px; border: 2px solid #ddd3ff; border-radius: 24px; background: linear-gradient(150deg, #f5f1ff 0%, #fff 45%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; }
 .event-details-backdrop { background: transparent; backdrop-filter: none; }
