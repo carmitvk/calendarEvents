@@ -66,7 +66,7 @@ h1::after { content: ''; position: absolute; right: 0; bottom: 0; width: 58%; he
 .excel-button { border: 1px solid #d5c5ee; border-radius: 8px; padding: 5px 10px; color: #674493; background: #fff; font-size: 12px; transition: background .2s ease, transform .2s ease; }
 .excel-button:hover { background: #f2eafb; transform: translateY(-1px); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.modal-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: 18px; overflow-y: auto; direction: ltr; background: #30214b66; backdrop-filter: blur(5px); z-index: 5; }
+.modal-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: 18px; overflow-y: auto; direction: ltr; background: linear-gradient(135deg, rgba(92, 57, 125, .62), rgba(207, 124, 168, .48)); backdrop-filter: blur(8px); z-index: 5; }
 .password-card { width: min(100%, 390px); position: relative; direction: rtl; padding: 34px; border: 2px solid #ddd3ff; border-radius: 24px; background: linear-gradient(150deg, #f5f1ff 0%, #fff 45%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; }
 .password-card h2 { margin: 0 0 22px; color: #41216e; font-family: 'Playfair Display', serif; font-size: 28px; text-align: center; }
 .password-input-wrap { position: relative; display: block; }
