@@ -271,10 +271,16 @@ function App() {
   }
 
   useEffect(() => {
-    fetch('/api/events')
+    function loadSharedEvents() {
+      return fetch(`/api/events?t=${Date.now()}`, { cache: 'no-store' })
       .then((response) => response.ok ? response.json() as Promise<EventItem[]> : Promise.reject(new Error('Events not found')))
       .then((loadedEvents) => setEvents(loadedEvents.map((event, index) => ({ ...event, id: index + 1 }))))
       .catch(() => undefined)
+    }
+
+    void loadSharedEvents()
+    const refreshTimer = window.setInterval(() => { void loadSharedEvents() }, 3000)
+    return () => window.clearInterval(refreshTimer)
   }, [])
 
   const calendarDays = useMemo(() => {

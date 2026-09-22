@@ -18,7 +18,7 @@ function normalizeDate(value: unknown) {
 }
 
 async function loadSheetEvents() {
-  const response = await fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=xlsx&gid=${sheetGid}`)
+  const response = await fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=xlsx&gid=${sheetGid}&t=${Date.now()}`, { cache: 'no-store' })
   if (!response.ok) throw new Error(`Google Sheet download failed: ${response.status}`)
   const workbook = XLSX.read(await response.arrayBuffer(), { type: 'array' })
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
