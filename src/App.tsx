@@ -604,7 +604,7 @@ function App() {
       </section>
 
       {selectedEvent && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedEvent(null)}>
+        <div className="modal-backdrop event-details-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedEvent(null)}>
           <section className="event-details-card" role="dialog" aria-modal="true" aria-labelledby="event-details-title">
             <button className="close-button event-details-close-button" type="button" onClick={() => setSelectedEvent(null)} aria-label="סגירת פרטי האירוע">×</button>
             <div className="event-card-heading">
