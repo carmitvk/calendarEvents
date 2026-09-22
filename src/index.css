@@ -75,6 +75,9 @@ h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3
 .password-card h2 { margin: 0 0 22px; color: #41216e; font-family: 'Playfair Display', serif; font-size: 28px; text-align: center; }
 .password-input-wrap { position: relative; display: block; width: 92%; margin-inline: auto; }
 .password-input-wrap input { width: 100%; padding-left: 48px; }
+.password-card .password-input-wrap input::-ms-reveal,
+.password-card .password-input-wrap input::-ms-clear { display: none; }
+.password-card .password-input-wrap input::-webkit-credentials-auto-fill-button { visibility: hidden; pointer-events: none; }
 .password-card .password-input-wrap input { min-height: 44px; padding-top: 8px; padding-bottom: 8px; border-radius: 11px; }
 .password-visibility-button { position: absolute; left: 1px; top: 50%; display: grid; place-items: center; width: 30px; height: 30px; transform: translateY(-50%); border: 0; border-radius: 7px; color: #8056c4; background: transparent; font-size: 17px; line-height: 1; }
 .password-visibility-button:hover { background: #f2eafb; }
