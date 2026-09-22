@@ -478,6 +478,20 @@ function App() {
     setWorkbookState({ workbook, fileName: `${fileName}.${sourceExtension}` })
   }
 
+  async function downloadSharedWorkbook() {
+    const response = await fetch(`/api/workbook?t=${Date.now()}`, { cache: 'no-store' })
+    if (!response.ok) {
+      window.alert('לא ניתן להוריד את נתוני האירועים.')
+      return
+    }
+    const downloadUrl = URL.createObjectURL(await response.blob())
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = 'calendar-events.xlsx'
+    link.click()
+    URL.revokeObjectURL(downloadUrl)
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -564,7 +578,7 @@ function App() {
           <span className="legend-item"><span className="legend-dot occupied-dot" />תפוס</span>
           <span className="excel-actions">
             <input ref={fileInputRef} className="visually-hidden" type="file" accept=".xlsm,.xlsx" onChange={loadWorkbook} />
-            <button type="button" className="excel-button" onClick={() => void saveWorkbook()}>הורד נתונים כ Excel</button>
+            <button type="button" className="excel-button" onClick={() => void downloadSharedWorkbook()}>הורד נתונים כ Excel</button>
           </span>
         </div>
 
