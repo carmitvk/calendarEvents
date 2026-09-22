@@ -249,6 +249,7 @@ function App() {
   const [visibleMonth, setVisibleMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [events, setEvents] = useState<EventItem[]>([])
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
   const [selectedEventDate, setSelectedEventDate] = useState('')
   const [workbookState, setWorkbookState] = useState<WorkbookState | null>(null)
   const [excelFileHandle, setExcelFileHandle] = useState<ExcelFileHandle | null>(null)
@@ -575,7 +576,14 @@ function App() {
                     <span className="hebrew-date">{getHebrewDate(date)}</span>
                   </div>
                 )}
-                {dayEvents.map((item) => <span className="event-pill" key={item.id}>{item.title}</span>)}
+                {dayEvents.map((item) => (
+                  <span
+                    className="event-pill"
+                    key={item.id}
+                    onDoubleClick={(event) => { event.stopPropagation(); setSelectedEvent(item) }}
+                    title="לחצי פעמיים להצגת פרטי האירוע"
+                  >{item.title}</span>
+                ))}
                 {isAdmin && isOccupied && deleteCandidateDate === dateKey && (
                   <button
                     type="button"
@@ -588,6 +596,23 @@ function App() {
           })}
         </div>
       </section>
+
+      {selectedEvent && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedEvent(null)}>
+          <section className="event-details-card" role="dialog" aria-modal="true" aria-labelledby="event-details-title">
+            <button className="close-button" type="button" onClick={() => setSelectedEvent(null)} aria-label="סגירת פרטי האירוע">×</button>
+            <div className="event-card-heading">
+              <span className="mini-spark">✦</span>
+              <h2 id="event-details-title">פרטי האירוע</h2>
+            </div>
+            <dl className="event-details-list">
+              <div><dt>שם האירוע</dt><dd>{selectedEvent.title}</dd></div>
+              <div><dt>כיתה</dt><dd>{selectedEvent.className}</dd></div>
+              <div><dt>תאריך האירוע</dt><dd>{formatDateForDisplay(selectedEvent.date)}</dd></div>
+            </dl>
+          </section>
+        </div>
+      )}
 
       {isFormOpen && (
         <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsFormOpen(false)}>

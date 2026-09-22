@@ -84,6 +84,11 @@ h1::after { content: ''; position: absolute; right: 0; bottom: 0; width: 58%; he
 .cancel-button:hover { background: #f2eafb; }
 .delete-confirm-button:hover { background: #bd3f73; }
 .event-card { width: min(100%, 650px); max-height: calc(100vh - 36px); position: relative; overflow-y: auto; direction: rtl; padding: clamp(28px, 5vw, 48px); border: 2px solid #ddd3ff; border-radius: 30px; background: linear-gradient(150deg, #f5f1ff 0%, #fff 35%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; }
+.event-details-card { width: min(100%, 460px); position: relative; direction: rtl; padding: 34px; border: 2px solid #ddd3ff; border-radius: 24px; background: linear-gradient(150deg, #f5f1ff 0%, #fff 45%, #f8ffea 100%); box-shadow: 0 26px 80px #3d246633; }
+.event-details-list { display: grid; gap: 14px; margin: 0; }
+.event-details-list > div { display: flex; justify-content: space-between; gap: 18px; padding: 12px 0; border-bottom: 1px solid #e8e0f5; }
+.event-details-list dt { color: #806f8f; font-weight: 700; }
+.event-details-list dd { margin: 0; color: #41216e; font-weight: 700; text-align: left; }
 .close-button { position: absolute; top: 18px; left: 22px; border: 0; background: transparent; color: #846e9d; font-size: 27px; line-height: 1; }
 .event-card-heading { text-align: center; margin-bottom: 28px; }
 .mini-spark { color: #b6d958; font-size: 22px; }
