@@ -48,8 +48,8 @@ function requestSession(request: VercelRequest) {
 }
 
 async function forwardWrite(payload: unknown) {
-  const scriptUrl = process.env.GOOGLE_SHEETS_SCRIPT_URL
-  const token = process.env.GOOGLE_SHEETS_SCRIPT_TOKEN
+  const scriptUrl = process.env.GOOGLE_SHEETS_SCRIPT_URL || process.env.TS_SCRIPT_URL
+  const token = process.env.GOOGLE_SHEETS_SCRIPT_TOKEN || process.env.WRITE_TOKEN
   if (!scriptUrl || !token) throw new Error('Google Sheets write connection is not configured')
   const response = await fetch(scriptUrl, {
     method: 'POST',
