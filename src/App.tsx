@@ -724,6 +724,7 @@ function App() {
                     <option value="ו3">ו3</option>
                     <option value="ו4">ו4</option>
                     <option value="שכבתי">שכבתי</option>
+                    <option value="בנות השכבה">בנות השכבה</option>
                     <option value="בית ספרי">בית ספרי</option>
                   </select>
                   <span className="class-select-arrow">⌄</span>
