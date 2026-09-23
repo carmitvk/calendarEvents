@@ -1,18 +1,9 @@
 import { createHmac, timingSafeEqual } from 'crypto'
-import fs from 'fs'
-import path from 'path'
 
 export type UserRole = 'user' | 'manager' | 'super_user'
 export type Session = { role: UserRole; userId: string }
 
 function accessCodes() {
-  try {
-    const values = fs.readFileSync(path.resolve(process.cwd(), 'xmlfiles', 'admin-pwd.txt'), 'utf8')
-      .split(/\r?\n/).map((value: string) => value.trim()).filter(Boolean)
-    if (values.length >= 2) return { manager: values[0], superUser: values[1] }
-  } catch {
-    // Production provides the same values through environment variables.
-  }
   return { manager: process.env.ADMIN_PASSWORD || '', superUser: process.env.SUPER_USER_PASSWORD || '' }
 }
 
