@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { readSession, type UserRole } from './admin/login'
+import { readSession } from './auth'
 
 export const config = { runtime: 'nodejs' }
 
