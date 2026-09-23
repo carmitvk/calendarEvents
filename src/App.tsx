@@ -269,6 +269,7 @@ function App() {
   const [passwordError, setPasswordError] = useState(false)
   const [deleteConfirmDate, setDeleteConfirmDate] = useState('')
   const [isExcelView, setIsExcelView] = useState(false)
+  const [eventLimitDate, setEventLimitDate] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingDeletedDates = useRef(new Set<string>())
   const isAuthenticated = userRole !== 'guest'
@@ -342,14 +343,22 @@ function App() {
       if (response.ok) return
       const responseText = await response.text()
       let message = responseText
+      let existingDate = ''
       try {
-        message = (JSON.parse(responseText) as { error?: string }).error || responseText
+        const result = JSON.parse(responseText) as { error?: string; existingDate?: string }
+        message = result.error || responseText
+        existingDate = result.existingDate || ''
       } catch {
         // Keep the plain server response when the API did not return JSON.
+      }
+      if (existingDate) {
+        setEventLimitDate(existingDate)
+        throw new Error('event-limit')
       }
       throw new Error(message || 'Event could not be saved')
     }).catch((error: unknown) => {
       setEvents(events)
+      if (error instanceof Error && error.message === 'event-limit') return
       window.alert(error instanceof Error && error.message ? `לא ניתן לשמור את האירוע. ${error.message}` : 'לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
     })
     setSelectedEventDate('')
@@ -591,6 +600,17 @@ function App() {
               <button type="button" className="cancel-button" onClick={() => setDeleteConfirmDate('')}>ביטול</button>
               <button type="button" className="delete-confirm-button" onClick={() => void deleteEvent(deleteConfirmDate)}>מחק</button>
             </div>
+          </section>
+        </div>
+      )}
+
+      {eventLimitDate && (
+        <div className="modal-backdrop event-limit-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setEventLimitDate('')}>
+          <section className="confirmation-card event-limit-card" role="dialog" aria-modal="true" aria-labelledby="event-limit-title">
+            <button className="close-button delete-confirm-close-button" type="button" onClick={() => setEventLimitDate('')} aria-label="סגירת הודעת המגבלה">×</button>
+            <h2 id="event-limit-title">שימי לב!</h2>
+            <p>משתמש רשאי לתפוס תאריך אחד בלבד.<br />על מנת לשנות, מחקי קודם את התאריך ששיבצת:<br /><strong>{formatDateForDisplay(eventLimitDate)}</strong></p>
+            <button type="button" className="cancel-button" onClick={() => setEventLimitDate('')}>הבנתי</button>
           </section>
         </div>
       )}

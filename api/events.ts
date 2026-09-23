@@ -90,8 +90,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
         return
       }
       const existingEvents = await loadSheetEvents()
-      if (session.role === 'user' && existingEvents.some((item) => item.ownerId === session.userId)) {
-        response.status(403).json({ error: 'A regular user may create only one event' })
+      const existingUserEvent = session.role === 'user' ? existingEvents.find((item) => item.ownerId === session.userId) : undefined
+      if (existingUserEvent) {
+        response.status(403).json({ error: 'A regular user may create only one event', existingDate: existingUserEvent.date })
         return
       }
       await forwardWrite({ action: 'upsert', event: { ...event, ownerId: session.userId }, role: session.role, userId: session.userId })
