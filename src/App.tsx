@@ -577,19 +577,21 @@ function App() {
       )}
 
       <section className="calendar-panel" aria-label="לוח שנה">
-        <div className="calendar-heading">
-          <button className="month-arrow" onClick={() => moveMonth(1)} aria-label="חודש הבא">→</button>
-          <div>
-            <p className="month-kicker">{getHebrewYearRange(visibleMonth)} · {visibleMonth.getFullYear()}</p>
-            <h2>{monthNames[visibleMonth.getMonth()]}</h2>
+        {!isExcelView && (
+          <div className="calendar-heading">
+            <button className="month-arrow" onClick={() => moveMonth(1)} aria-label="חודש הבא">→</button>
+            <div>
+              <p className="month-kicker">{getHebrewYearRange(visibleMonth)} · {visibleMonth.getFullYear()}</p>
+              <h2>{monthNames[visibleMonth.getMonth()]}</h2>
+            </div>
+            <button
+              className="month-arrow"
+              onClick={() => moveMonth(-1)}
+              disabled={visibleMonth.getFullYear() === today.getFullYear() && visibleMonth.getMonth() === today.getMonth()}
+              aria-label="חודש קודם"
+            >←</button>
           </div>
-          <button
-            className="month-arrow"
-            onClick={() => moveMonth(-1)}
-            disabled={visibleMonth.getFullYear() === today.getFullYear() && visibleMonth.getMonth() === today.getMonth()}
-            aria-label="חודש קודם"
-          >←</button>
-        </div>
+        )}
 
         <div className="footer-note calendar-legend">
           <span className="legend-item"><span className="legend-dot available-dot" />פנוי</span>
