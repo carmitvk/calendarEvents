@@ -16,12 +16,12 @@
       <stop offset="1" stop-color="#C07CEA"/>
     </linearGradient>
     <radialGradient id="bgGlow" cx="50%" cy="42%" r="65%">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="1" stop-color="#F5F7FF"/>
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="1" stop-color="#F5F7FF" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="1200" height="1200" fill="#FFFFFF"/>
+  <rect width="1200" height="1200" fill="none"/>
 
   <circle cx="600" cy="600" r="545" fill="url(#bgGlow)" stroke="url(#ringGrad)" stroke-width="26"/>
 
