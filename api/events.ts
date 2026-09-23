@@ -1,6 +1,8 @@
 import * as XLSX from 'xlsx'
 import { readSession, type UserRole } from './admin/login'
 
+export const config = { runtime: 'nodejs' }
+
 type VercelRequest = { method?: string; body?: unknown; headers?: Record<string, string | undefined> }
 type VercelResponse = { status: (code: number) => VercelResponse; json: (body: unknown) => void }
 
