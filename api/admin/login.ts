@@ -1,4 +1,4 @@
-import { authenticateCode, createSessionToken, type UserRole } from '../auth'
+import { authenticateCode, createSessionToken, type UserRole } from '../auth.js'
 
 type VercelRequest = {
   method?: string

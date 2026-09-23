@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { readSession } from './auth'
+import { readSession } from './auth.js'
 
 type VercelRequest = { method?: string; body?: unknown; headers?: Record<string, string | undefined> }
 type VercelResponse = { status: (code: number) => VercelResponse; json: (body: unknown) => void }
