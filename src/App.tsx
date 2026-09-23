@@ -270,6 +270,7 @@ function App() {
   const [deleteConfirmDate, setDeleteConfirmDate] = useState('')
   const [isExcelView, setIsExcelView] = useState(false)
   const [eventLimitDate, setEventLimitDate] = useState('')
+  const [deletePermissionError, setDeletePermissionError] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingDeletedDates = useRef(new Set<string>())
   const isAuthenticated = userRole !== 'guest'
@@ -414,6 +415,7 @@ function App() {
     if (!response.ok) {
       pendingDeletedDates.current.delete(date)
       setEvents(previousEvents)
+      if (response.status === 403) setDeletePermissionError(true)
     }
   }
 
@@ -611,6 +613,17 @@ function App() {
             <h2 id="event-limit-title">שימי לב!</h2>
             <p>משתמש רשאי לתפוס תאריך אחד בלבד.<br />על מנת לשנות, מחקי קודם את התאריך ששיבצת:<br /><strong>{formatDateForDisplay(eventLimitDate)}</strong></p>
             <button type="button" className="cancel-button" onClick={() => setEventLimitDate('')}>הבנתי</button>
+          </section>
+        </div>
+      )}
+
+      {deletePermissionError && (
+        <div className="modal-backdrop event-limit-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeletePermissionError(false)}>
+          <section className="confirmation-card event-limit-card" role="dialog" aria-modal="true" aria-labelledby="delete-permission-title">
+            <button className="close-button delete-confirm-close-button" type="button" onClick={() => setDeletePermissionError(false)} aria-label="סגירת הודעת המחיקה">×</button>
+            <h2 id="delete-permission-title">שימי לב!</h2>
+            <p>משתמש רשאי למחוק רק אירוע שלו.</p>
+            <button type="button" className="cancel-button" onClick={() => setDeletePermissionError(false)}>הבנתי</button>
           </section>
         </div>
       )}
