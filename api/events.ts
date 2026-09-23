@@ -1,10 +1,12 @@
 import * as XLSX from 'xlsx'
+import { readSession, type UserRole } from './admin/login'
 
-type VercelRequest = { method?: string; body?: unknown }
+type VercelRequest = { method?: string; body?: unknown; headers?: Record<string, string | undefined> }
 type VercelResponse = { status: (code: number) => VercelResponse; json: (body: unknown) => void }
 
 const spreadsheetId = '1V3wMw6tGR1XgiHqOov-nPGG-6CXL-e8o3qvA4uxTX5M'
 const sheetGid = '2108382964'
+const sharedClasses = new Set(['שכבתי', 'בית ספרי', 'בנות השכבה'])
 
 function normalizeDate(value: unknown) {
   if (value instanceof Date) return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
@@ -30,12 +32,19 @@ async function loadSheetEvents() {
   const dateIndex = headers.findIndex((header) => header.includes('תאריך לועזי'))
   const titleIndex = headers.findIndex((header) => header.includes('שם החוגגת'))
   const classIndex = headers.findIndex((header) => header.includes('כיתה'))
+  const ownerIndex = headers.findIndex((header) => header.includes('תז') || header.includes('ת.ז') || header.includes('ת״ז'))
   return rows.slice(headerIndex + 1).map((row, index) => ({
     id: index + 1,
     date: normalizeDate(row[dateIndex]),
     title: String(row[titleIndex] || '').trim(),
     className: String(row[classIndex] || '').trim(),
+    ownerId: ownerIndex >= 0 ? String(row[ownerIndex] || '').trim() : '',
   })).filter((event) => event.date && event.title)
+}
+
+function requestSession(request: VercelRequest) {
+  const authorization = request.headers?.authorization || request.headers?.Authorization
+  return readSession(authorization?.replace(/^Bearer\s+/i, ''))
 }
 
 async function forwardWrite(payload: unknown) {
@@ -59,13 +68,46 @@ export default async function handler(request: VercelRequest, response: VercelRe
       return
     }
     if (request.method === 'POST') {
-      await forwardWrite({ action: 'upsert', event: request.body })
+      const session = requestSession(request)
+      if (!session) {
+        response.status(401).json({ error: 'Login required' })
+        return
+      }
+      const event = request.body as { title?: string; className?: string; date?: string } | undefined
+      if (!event?.title || !event.className || !event.date) {
+        response.status(400).json({ error: 'Incomplete event' })
+        return
+      }
+      if (sharedClasses.has(event.className) && session.role === 'user') {
+        response.status(403).json({ error: 'Only managers can create shared events' })
+        return
+      }
+      const existingEvents = await loadSheetEvents()
+      if (session.role === 'user' && existingEvents.some((item) => item.ownerId === session.userId)) {
+        response.status(403).json({ error: 'A regular user may create only one event' })
+        return
+      }
+      await forwardWrite({ action: 'upsert', event: { ...event, ownerId: session.userId }, role: session.role, userId: session.userId })
       response.status(201).json({ ok: true })
       return
     }
     if (request.method === 'DELETE') {
+      const session = requestSession(request)
+      if (!session) {
+        response.status(401).json({ error: 'Login required' })
+        return
+      }
       const payload = request.body as { date?: string } | undefined
-      await forwardWrite({ action: 'delete', date: payload?.date })
+      const existingEvent = (await loadSheetEvents()).find((item) => item.date === payload?.date)
+      if (!existingEvent) {
+        response.status(404).json({ error: 'Event not found' })
+        return
+      }
+      if (session.role !== 'super_user' && existingEvent.ownerId !== session.userId) {
+        response.status(403).json({ error: 'You can delete only your own event' })
+        return
+      }
+      await forwardWrite({ action: 'delete', date: payload?.date, role: session.role, userId: session.userId })
       response.status(200).json({ ok: true })
       return
     }

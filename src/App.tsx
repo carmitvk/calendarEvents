@@ -6,7 +6,10 @@ type EventItem = {
   title: string
   className: string
   date: string
+  ownerId?: string
 }
+
+type UserRole = 'guest' | 'user' | 'manager' | 'super_user'
 
 type WorkbookState = {
   workbook: XLSX.WorkBook
@@ -255,7 +258,8 @@ function App() {
   const [excelFileHandle, setExcelFileHandle] = useState<ExcelFileHandle | null>(null)
   const [dateValidationAttempted, setDateValidationAttempted] = useState(false)
   const [validationErrors, setValidationErrors] = useState({ title: false, className: false })
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [userRole, setUserRole] = useState<UserRole>('guest')
+  const [sessionUserId, setSessionUserId] = useState('')
   const [adminToken, setAdminToken] = useState('')
   const [deleteCandidateDate, setDeleteCandidateDate] = useState('')
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
@@ -267,6 +271,8 @@ function App() {
   const [isExcelView, setIsExcelView] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingDeletedDates = useRef(new Set<string>())
+  const isAuthenticated = userRole !== 'guest'
+  const isAdmin = userRole === 'manager' || userRole === 'super_user'
 
   function applyWorkbook(workbook: XLSX.WorkBook, fileName: string) {
     setEvents(readEventsFromWorkbook(workbook))
@@ -324,15 +330,16 @@ function App() {
     setDateValidationAttempted(!date)
     if (!title || !className || !date || events.some((event) => event.date === date)) return
 
-    const newEvent = { id: Date.now(), title, className, date }
+    if (!isAuthenticated) return
+    const newEvent = { id: Date.now(), title, className, date, ownerId: sessionUserId }
     const nextEvents = [...events, newEvent]
     setEvents(nextEvents)
     void fetch('/api/events', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newEvent),
-    }).then((response) => {
-      if (!response.ok) throw new Error('Event could not be saved')
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ title, className, date }),
+    }).then(async (response) => {
+      if (!response.ok) throw new Error((await response.json() as { error?: string }).error || 'Event could not be saved')
     }).catch(() => {
       setEvents(events)
       window.alert('לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
@@ -343,8 +350,10 @@ function App() {
   }
 
   function requestAdminAccess() {
-    if (isAdmin) {
-      setIsAdmin(false)
+    if (isAuthenticated) {
+      setUserRole('guest')
+      setSessionUserId('')
+      setAdminToken('')
       setDeleteCandidateDate('')
       return
     }
@@ -360,9 +369,10 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: adminPassword }),
     })
-    const result = response.ok ? await response.json() as { valid?: boolean; token?: string } : { valid: false }
-    if (result.valid) {
-      setIsAdmin(true)
+    const result = response.ok ? await response.json() as { valid?: boolean; role?: UserRole; userId?: string; token?: string } : { valid: false }
+    if (result.valid && result.role && result.userId && result.token) {
+      setUserRole(result.role)
+      setSessionUserId(result.userId)
       setAdminToken(result.token || '')
       setIsPasswordDialogOpen(false)
       setAdminPassword('')
@@ -373,7 +383,7 @@ function App() {
   }
 
   async function deleteEvent(date: string) {
-    if (!isAdmin) return
+    if (!isAuthenticated) return
     const previousEvents = events
     pendingDeletedDates.current.add(date)
     setEvents((current) => current.filter((event) => event.date !== date))
@@ -500,18 +510,18 @@ function App() {
       <header className="topbar">
         <div className="brand-block">
           <button
-            className={`brand-logo-button ${isAdmin ? 'admin-active' : ''}`}
+            className={`brand-logo-button ${isAuthenticated ? 'admin-active' : ''}`}
             type="button"
             onClick={requestAdminAccess}
-            title={isAdmin ? 'יציאה ממצב מנהל' : 'כניסה למצב מנהל'}
-            aria-label={isAdmin ? 'יציאה ממצב מנהל' : 'כניסה למצב מנהל'}
+            title={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
+            aria-label={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
           ><img src="/logo.png" alt="Carmit Vaknin Software" /></button>
           <h1 className={isAdmin ? 'admin-mode-title' : ''}>לוח אירועים שנת בת מצווה</h1>
         </div>
-        <button className="primary-button" onClick={() => { setSelectedEventDate(''); setIsFormOpen(true) }}>
+        {isAuthenticated && <button className="primary-button" onClick={() => { setSelectedEventDate(''); setIsFormOpen(true) }}>
           <span className="plus-icon">+</span>
           שבץ אירוע
-        </button>
+        </button>}
       </header>
 
       {isPasswordDialogOpen && (
@@ -636,9 +646,9 @@ function App() {
                   <div
                     className={`day-cell ${!date ? 'empty' : isOccupied ? 'occupied' : 'available'} ${isToday ? 'today' : ''}`}
                     key={dateKey}
-                    onClick={() => isAdmin && isOccupied && setDeleteCandidateDate(dateKey)}
+                    onClick={() => isAuthenticated && isOccupied && setDeleteCandidateDate(dateKey)}
                     onContextMenu={(event) => {
-                      if (!isAdmin || !isOccupied) return
+                      if (!isAuthenticated || !isOccupied) return
                       event.preventDefault()
                       setDeleteCandidateDate(dateKey)
                     }}
@@ -657,7 +667,7 @@ function App() {
                         title="לחצי פעמיים להצגת פרטי האירוע"
                       >{item.title}</span>
                     ))}
-                    {isAdmin && isOccupied && deleteCandidateDate === dateKey && (
+                    {isAuthenticated && isOccupied && deleteCandidateDate === dateKey && (
                       <button
                         type="button"
                         className="delete-event-button"
@@ -726,9 +736,11 @@ function App() {
                     <option value="" disabled>בחר כיתה</option>
                     <option value="ו3">ו3</option>
                     <option value="ו4">ו4</option>
-                    <option value="שכבתי">שכבתי</option>
-                    <option value="בנות השכבה">בנות השכבה</option>
-                    <option value="בית ספרי">בית ספרי</option>
+                    {isAdmin && <>
+                      <option value="שכבתי">שכבתי</option>
+                      <option value="בנות השכבה">בנות השכבה</option>
+                      <option value="בית ספרי">בית ספרי</option>
+                    </>}
                   </select>
                   <span className="class-select-arrow">⌄</span>
                 </span>

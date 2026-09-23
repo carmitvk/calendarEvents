@@ -42,10 +42,26 @@ function doPost(request) {
     const hebrewColumn = header.findIndex(value => value.includes('תאריך עברי'));
     const titleColumn = header.findIndex(value => value.includes('שם החוגגת'));
     const classColumn = header.findIndex(value => value.includes('כיתה'));
+    let ownerColumn = header.findIndex(value => value.includes('תז') || value.includes('ת.ז') || value.includes('ת״ז'));
     if (dateColumn < 0 || titleColumn < 0 || classColumn < 0) return json({ ok: false, error: 'Required columns not found' });
+    if (ownerColumn < 0) {
+      ownerColumn = header.length;
+      sheet.getRange(headerRow + 1, ownerColumn + 1).setValue('ת״ז');
+    }
 
     if (payload.action === 'upsert') {
       const event = payload.event || {};
+      const role = payload.role || 'user';
+      const ownerId = String(payload.userId || event.ownerId || '').trim();
+      const sharedClasses = ['שכבתי', 'בית ספרי', 'בנות השכבה'];
+      if (!ownerId) return json({ ok: false, error: 'Owner ID is required' });
+      if (role === 'user' && sharedClasses.includes(String(event.className || ''))) {
+        return json({ ok: false, error: 'Only managers can create shared events' });
+      }
+      if (role === 'user') {
+        const alreadyCreated = values.slice(headerRow + 1).some(item => String(item[ownerColumn] || '').trim() === ownerId && String(item[titleColumn] || '').trim());
+        if (alreadyCreated) return json({ ok: false, error: 'A regular user may create only one event' });
+      }
       const row = values.slice(headerRow + 1).findIndex(item =>
         toDateKey(item[dateColumn]) === event.date ||
         (hebrewColumn >= 0 && toDateKey(item[hebrewColumn]) === event.date)
@@ -64,13 +80,21 @@ function doPost(request) {
       }
       sheet.getRange(rowNumber, titleColumn + 1).setValue(event.title || '');
       sheet.getRange(rowNumber, classColumn + 1).setValue(event.className || '');
+      sheet.getRange(rowNumber, ownerColumn + 1).setNumberFormat('@').setValue(ownerId);
       return json({ ok: true });
     }
     if (payload.action === 'delete') {
+      const role = payload.role || 'user';
+      const ownerId = String(payload.userId || '').trim();
       const row = values.slice(headerRow + 1).findIndex(item => toDateKey(item[dateColumn]) === payload.date);
       if (row >= 0) {
+        const existingOwnerId = String(values[headerRow + 1 + row][ownerColumn] || '').trim();
+        if (role !== 'super_user' && existingOwnerId !== ownerId) {
+          return json({ ok: false, error: 'You can delete only your own event' });
+        }
         sheet.getRange(headerRow + 2 + row, titleColumn + 1).clearContent();
         sheet.getRange(headerRow + 2 + row, classColumn + 1).clearContent();
+        sheet.getRange(headerRow + 2 + row, ownerColumn + 1).clearContent();
       }
       return json({ ok: true });
     }
