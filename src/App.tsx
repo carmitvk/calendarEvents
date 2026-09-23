@@ -340,9 +340,9 @@ function App() {
       body: JSON.stringify({ title, className, date }),
     }).then(async (response) => {
       if (!response.ok) throw new Error((await response.json() as { error?: string }).error || 'Event could not be saved')
-    }).catch(() => {
+    }).catch((error: unknown) => {
       setEvents(events)
-      window.alert('לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
+      window.alert(error instanceof Error && error.message ? `לא ניתן לשמור את האירוע. ${error.message}` : 'לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
     })
     setSelectedEventDate('')
     setIsFormOpen(false)
