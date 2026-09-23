@@ -264,6 +264,7 @@ function App() {
   const [showAdminPassword, setShowAdminPassword] = useState(false)
   const [passwordError, setPasswordError] = useState(false)
   const [deleteConfirmDate, setDeleteConfirmDate] = useState('')
+  const [isExcelView, setIsExcelView] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingDeletedDates = useRef(new Set<string>())
 
@@ -596,54 +597,76 @@ function App() {
           <span className="excel-actions">
             <input ref={fileInputRef} className="visually-hidden" type="file" accept=".xlsm,.xlsx" onChange={loadWorkbook} />
             <button type="button" className="excel-button" onClick={() => setIsDownloadDialogOpen(true)}>הורד נתונים כ Excel</button>
+            <button type="button" className="excel-button" onClick={() => setIsExcelView((current) => !current)}>{isExcelView ? 'הצג כיומן' : 'הצג כאקסל'}</button>
           </span>
         </div>
 
-        <div className="week-row">
-          {dayNames.map((day) => <span key={day}>{day}</span>)}
-        </div>
-        <div className="calendar-grid">
-          {calendarDays.map((date, index) => {
-            const dateKey = date ? toDateKey(date) : `empty-${index}`
-            const dayEvents = date ? events.filter((item) => item.date === dateKey) : []
-            const isToday = dateKey === toDateKey(today)
-            const isOccupied = dayEvents.length > 0
-            return (
-              <div
-                className={`day-cell ${!date ? 'empty' : isOccupied ? 'occupied' : 'available'} ${isToday ? 'today' : ''}`}
-                key={dateKey}
-                onClick={() => isAdmin && isOccupied && setDeleteCandidateDate(dateKey)}
-                onContextMenu={(event) => {
-                  if (!isAdmin || !isOccupied) return
-                  event.preventDefault()
-                  setDeleteCandidateDate(dateKey)
-                }}
-              >
-                {date && (
-                  <div className="day-label">
-                    <span className={`day-number ${isOccupied ? 'occupied' : 'available'}`}>{date.getDate()}</span>
-                    <span className="hebrew-date">{getHebrewDate(date)}</span>
-                  </div>
-                )}
-                {dayEvents.map((item) => (
-                  <span
-                    className="event-pill"
-                    key={item.id}
-                    onDoubleClick={(event) => { event.stopPropagation(); setSelectedEvent(item) }}
-                    title="לחצי פעמיים להצגת פרטי האירוע"
-                  >{item.title}</span>
+        {isExcelView ? (
+          <div className="excel-view" role="region" aria-label="נתוני האירועים בתצוגת אקסל">
+            <table className="excel-table">
+              <thead>
+                <tr><th>תאריך לועזי</th><th>שם החוגגת</th><th>כיתה</th></tr>
+              </thead>
+              <tbody>
+                {events.filter((event) => event.title.trim()).map((event) => (
+                  <tr key={event.id}>
+                    <td>{formatDateForDisplay(event.date)}</td>
+                    <td>{event.title}</td>
+                    <td>{event.className}</td>
+                  </tr>
                 ))}
-                {isAdmin && isOccupied && deleteCandidateDate === dateKey && (
-                  <button
-                    type="button"
-                    className="delete-event-button"
-                    onClick={(event) => { event.stopPropagation(); setDeleteConfirmDate(dateKey) }}
-                  >מחק</button>
-                )}
-              </div>
-            )
-          })}
-        </div>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <>
+            <div className="week-row">
+              {dayNames.map((day) => <span key={day}>{day}</span>)}
+            </div>
+            <div className="calendar-grid">
+              {calendarDays.map((date, index) => {
+                const dateKey = date ? toDateKey(date) : `empty-${index}`
+                const dayEvents = date ? events.filter((item) => item.date === dateKey) : []
+                const isToday = dateKey === toDateKey(today)
+                const isOccupied = dayEvents.length > 0
+                return (
+                  <div
+                    className={`day-cell ${!date ? 'empty' : isOccupied ? 'occupied' : 'available'} ${isToday ? 'today' : ''}`}
+                    key={dateKey}
+                    onClick={() => isAdmin && isOccupied && setDeleteCandidateDate(dateKey)}
+                    onContextMenu={(event) => {
+                      if (!isAdmin || !isOccupied) return
+                      event.preventDefault()
+                      setDeleteCandidateDate(dateKey)
+                    }}
+                  >
+                    {date && (
+                      <div className="day-label">
+                        <span className={`day-number ${isOccupied ? 'occupied' : 'available'}`}>{date.getDate()}</span>
+                        <span className="hebrew-date">{getHebrewDate(date)}</span>
+                      </div>
+                    )}
+                    {dayEvents.map((item) => (
+                      <span
+                        className="event-pill"
+                        key={item.id}
+                        onDoubleClick={(event) => { event.stopPropagation(); setSelectedEvent(item) }}
+                        title="לחצי פעמיים להצגת פרטי האירוע"
+                      >{item.title}</span>
+                    ))}
+                    {isAdmin && isOccupied && deleteCandidateDate === dateKey && (
+                      <button
+                        type="button"
+                        className="delete-event-button"
+                        onClick={(event) => { event.stopPropagation(); setDeleteConfirmDate(dateKey) }}
+                      >מחק</button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
       </section>
 
       <footer className="software-credit" dir="ltr">
