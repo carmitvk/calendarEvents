@@ -518,7 +518,7 @@ function App() {
         <div className="modal-backdrop password-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsPasswordDialogOpen(false)}>
           <section className="password-card" role="dialog" aria-modal="true" aria-labelledby="password-title">
             <button className="close-button password-close-button" type="button" onClick={() => setIsPasswordDialogOpen(false)} aria-label="סגירת חלון הסיסמה">×</button>
-            <h2 id="password-title">הכנס תז כסיסמא</h2>
+            <h2 id="password-title">התחברות למערכת</h2>
             <form onSubmit={verifyAdminPassword}>
               <label>
                 סיסמה
@@ -527,7 +527,7 @@ function App() {
                     type={showAdminPassword ? 'text' : 'password'}
                     value={adminPassword}
                     autoFocus
-                    placeholder="תז 9 ספרות"
+                    placeholder="ת.ז (9 ספרות)"
                     onChange={(event) => { setAdminPassword(event.target.value); setPasswordError(false) }}
                     required
                   />
