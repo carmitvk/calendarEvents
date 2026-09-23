@@ -597,7 +597,7 @@ function App() {
           <span className="excel-actions">
             <input ref={fileInputRef} className="visually-hidden" type="file" accept=".xlsm,.xlsx" onChange={loadWorkbook} />
             <button type="button" className="excel-button" onClick={() => setIsDownloadDialogOpen(true)}>הורד נתונים כ Excel</button>
-            <button type="button" className="excel-button" onClick={() => setIsExcelView((current) => !current)}>{isExcelView ? 'הצג כיומן' : 'הצג כרשימה'}</button>
+            <button type="button" className="excel-button" onClick={() => setIsExcelView((current) => !current)}>{isExcelView ? 'הצג כלוח שנה' : 'הצג כרשימה'}</button>
           </span>
         </div>
 
