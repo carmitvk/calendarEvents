@@ -1,6 +1,6 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
-import fs from 'node:fs'
-import path from 'node:path'
+import { createHmac, timingSafeEqual } from 'crypto'
+import fs from 'fs'
+import path from 'path'
 
 export type UserRole = 'user' | 'manager' | 'super_user'
 export type Session = { role: UserRole; userId: string }
