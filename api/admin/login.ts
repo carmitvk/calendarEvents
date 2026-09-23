@@ -10,7 +10,7 @@ type VercelResponse = {
   json: (body: unknown) => void
 }
 
-export default function handler(request: VercelRequest, response: VercelResponse) {
+export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'POST') {
     response.status(405).json({ error: 'Method not allowed' })
     return
@@ -25,5 +25,5 @@ export default function handler(request: VercelRequest, response: VercelResponse
     response.status(200).json({ valid: false })
     return
   }
-  response.status(200).json({ valid: true, ...session, token: createSessionToken(session) })
+  response.status(200).json({ valid: true, ...session, token: await createSessionToken(session) })
 }

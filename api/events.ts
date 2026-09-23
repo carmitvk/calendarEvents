@@ -44,7 +44,7 @@ async function loadSheetEvents() {
   })).filter((event) => event.date && event.title)
 }
 
-function requestSession(request: VercelRequest) {
+async function requestSession(request: VercelRequest) {
   const authorization = request.headers?.authorization || request.headers?.Authorization
   return readSession(authorization?.replace(/^Bearer\s+/i, ''))
 }
@@ -77,7 +77,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       return
     }
     if (request.method === 'POST') {
-      const session = requestSession(request)
+      const session = await requestSession(request)
       if (!session) {
         response.status(401).json({ error: 'Login required' })
         return
@@ -101,7 +101,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       return
     }
     if (request.method === 'DELETE') {
-      const session = requestSession(request)
+      const session = await requestSession(request)
       if (!session) {
         response.status(401).json({ error: 'Login required' })
         return

@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from 'crypto'
-
 export type UserRole = 'user' | 'manager' | 'super_user'
 export type Session = { role: UserRole; userId: string }
 
@@ -20,22 +18,36 @@ function sessionSecret() {
   return process.env.AUTH_SECRET || `${codes.manager}:${codes.superUser}:calendar-access`
 }
 
-export function createSessionToken(session: Session) {
-  const payload = Buffer.from(JSON.stringify(session)).toString('base64url')
-  const signature = createHmac('sha256', sessionSecret()).update(payload).digest('base64url')
-  return `${payload}.${signature}`
+function encode(value: string) {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte) })
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-export function readSession(value: string | undefined): Session | null {
+function decode(value: string) {
+  const padded = value.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((value.length + 3) % 4)
+  const binary = atob(padded)
+  return new TextDecoder().decode(Uint8Array.from(binary, (character) => character.charCodeAt(0)))
+}
+
+async function signature(value: string) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(sessionSecret()), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const bytes = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)))
+  return encode(String.fromCharCode(...bytes))
+}
+
+export async function createSessionToken(session: Session) {
+  const payload = encode(JSON.stringify(session))
+  return `${payload}.${await signature(payload)}`
+}
+
+export async function readSession(value: string | undefined): Promise<Session | null> {
   if (!value) return null
-  const [payload, signature] = value.split('.')
-  if (!payload || !signature) return null
-  const expected = createHmac('sha256', sessionSecret()).update(payload).digest('base64url')
-  const actual = Buffer.from(signature)
-  const target = Buffer.from(expected)
-  if (actual.length !== target.length || !timingSafeEqual(actual, target)) return null
+  const [payload, suppliedSignature] = value.split('.')
+  if (!payload || !suppliedSignature || suppliedSignature !== await signature(payload)) return null
   try {
-    const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as Session
+    const session = JSON.parse(decode(payload)) as Session
     return session.role && session.userId ? session : null
   } catch {
     return null
