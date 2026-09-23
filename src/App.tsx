@@ -260,6 +260,7 @@ function App() {
   const [deleteCandidateDate, setDeleteCandidateDate] = useState('')
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
   const [adminPassword, setAdminPassword] = useState('')
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false)
   const [showAdminPassword, setShowAdminPassword] = useState(false)
   const [passwordError, setPasswordError] = useState(false)
   const [deleteConfirmDate, setDeleteConfirmDate] = useState('')
@@ -490,6 +491,7 @@ function App() {
     link.download = 'calendar-events.xlsx'
     link.click()
     URL.revokeObjectURL(downloadUrl)
+    setIsDownloadDialogOpen(false)
   }
 
   return (
@@ -542,6 +544,21 @@ function App() {
           </section>
         </div>
       )}
+      {isDownloadDialogOpen && (
+        <div className="modal-backdrop download-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsDownloadDialogOpen(false)}>
+          <section className="password-card download-card" role="dialog" aria-modal="true" aria-labelledby="download-title">
+            <button className="close-button password-close-button" type="button" onClick={() => setIsDownloadDialogOpen(false)} aria-label="סגירת הודעת ההורדה">×</button>
+            <h2 id="download-title">שים לב!</h2>
+            <p className="download-message">
+              תוכן הקובץ הינו תמונת מצב קיימת נכון לרגע זה.<br />
+              כל עדכון באקסל הינו מקומי בלבד ולא יעבור לאפליקציה.<br />
+              עדכונים ייעשו רק דרך האפליקציה.<br />
+              בשמחות ;)
+            </p>
+            <button className="submit-button" type="button" onClick={() => { setIsDownloadDialogOpen(false); void downloadSharedWorkbook() }}>המשך</button>
+          </section>
+        </div>
+      )}
 
       {deleteConfirmDate && (
         <div className="modal-backdrop delete-confirm-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteConfirmDate('')}>
@@ -578,7 +595,7 @@ function App() {
           <span className="legend-item"><span className="legend-dot occupied-dot" />תפוס</span>
           <span className="excel-actions">
             <input ref={fileInputRef} className="visually-hidden" type="file" accept=".xlsm,.xlsx" onChange={loadWorkbook} />
-            <button type="button" className="excel-button" onClick={() => void downloadSharedWorkbook()}>הורד נתונים כ Excel</button>
+            <button type="button" className="excel-button" onClick={() => setIsDownloadDialogOpen(true)}>הורד נתונים כ Excel</button>
           </span>
         </div>
 
