@@ -56,8 +56,15 @@ async function forwardWrite(payload: unknown) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...(payload as object), token }),
   })
-  if (!response.ok) throw new Error(`Google Sheets update failed: ${response.status}`)
-  const result = await response.json() as { ok?: boolean; error?: string }
+  const responseText = await response.text()
+  let result: { ok?: boolean; error?: string }
+  try {
+    result = JSON.parse(responseText) as { ok?: boolean; error?: string }
+  } catch {
+    const detail = responseText.replace(/\s+/g, ' ').trim().slice(0, 240)
+    throw new Error(`Google Apps Script returned an invalid response (${response.status}): ${detail || 'empty response'}`)
+  }
+  if (!response.ok) throw new Error(`Google Sheets update failed: ${response.status} ${result.error || ''}`.trim())
   if (!result.ok) throw new Error(result.error || 'Google Sheets update failed')
 }
 
