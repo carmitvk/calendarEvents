@@ -610,7 +610,7 @@ function App() {
         <div className="modal-backdrop event-limit-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setEventLimitDate('')}>
           <section className="confirmation-card event-limit-card" role="dialog" aria-modal="true" aria-labelledby="event-limit-title">
             <button className="close-button delete-confirm-close-button" type="button" onClick={() => setEventLimitDate('')} aria-label="סגירת הודעת המגבלה">×</button>
-            <h2 id="event-limit-title">שימי לב!</h2>
+            <h2 id="event-limit-title">שים לב!</h2>
             <p>משתמש רשאי לתפוס תאריך אחד בלבד.<br />על מנת לשנות, מחקי קודם את התאריך ששיבצת:<br /><strong>{formatDateForDisplay(eventLimitDate)}</strong></p>
             <button type="button" className="cancel-button" onClick={() => setEventLimitDate('')}>הבנתי</button>
           </section>
@@ -621,7 +621,7 @@ function App() {
         <div className="modal-backdrop event-limit-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeletePermissionError(false)}>
           <section className="confirmation-card event-limit-card" role="dialog" aria-modal="true" aria-labelledby="delete-permission-title">
             <button className="close-button delete-confirm-close-button" type="button" onClick={() => setDeletePermissionError(false)} aria-label="סגירת הודעת המחיקה">×</button>
-            <h2 id="delete-permission-title">שימי לב!</h2>
+            <h2 id="delete-permission-title">שים לב!</h2>
             <p>משתמש רשאי למחוק רק אירוע שלו.</p>
             <button type="button" className="cancel-button" onClick={() => setDeletePermissionError(false)}>הבנתי</button>
           </section>
