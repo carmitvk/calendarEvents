@@ -20,13 +20,13 @@ button { cursor: pointer; }
   background: radial-gradient(circle at 12% 14%, #eee8ff 0, transparent 28%), radial-gradient(circle at 85% 12%, #effdd4 0, transparent 25%), #fbfcf8;
 }
 .topbar { position: relative; display: flex; justify-content: space-between; align-items: center; max-width: 1120px; margin: 0 auto 36px; gap: 24px; }
-.brand-block { display: flex; direction: rtl; align-items: flex-end; gap: 18px; min-width: 0; }
+.brand-block { display: flex; direction: rtl; align-items: flex-end; gap: 10px; min-width: 0; }
 .brand-identity { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 0 0 auto; }
 .account-button { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; border: 1px solid #d6cbea; border-radius: 8px; color: #674493; background: rgba(255,255,255,.72); font-size: 11px; font-weight: 700; white-space: nowrap; transition: background .2s ease, box-shadow .2s ease, transform .2s ease; }
 .account-button:hover { background: #fff; box-shadow: 0 8px 18px rgba(120, 95, 175, .12); transform: translateY(-1px); }
 .brand-block h1 { flex: 1 1 auto; width: auto; min-width: 0; white-space: nowrap; font-size: clamp(24px, 3.2vw, 42px); }
 .account-button:focus-visible { outline: 2px solid #8056c4; outline-offset: 4px; }
-.brand-logo-button { width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; overflow: hidden; }
+.brand-logo-button { width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; overflow: hidden; }
 .brand-logo-button img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .brand-logo-button:focus-visible { outline: 2px solid #8056c4; outline-offset: 4px; }
 .user-icon { position: relative; display: inline-block; flex: 0 0 18px; width: 18px; height: 18px; border: 1.5px solid #8056c4; border-radius: 50%; }
