@@ -339,7 +339,15 @@ function App() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
       body: JSON.stringify({ title, className, date }),
     }).then(async (response) => {
-      if (!response.ok) throw new Error((await response.json() as { error?: string }).error || 'Event could not be saved')
+      if (response.ok) return
+      const responseText = await response.text()
+      let message = responseText
+      try {
+        message = (JSON.parse(responseText) as { error?: string }).error || responseText
+      } catch {
+        // Keep the plain server response when the API did not return JSON.
+      }
+      throw new Error(message || 'Event could not be saved')
     }).catch((error: unknown) => {
       setEvents(events)
       window.alert(error instanceof Error && error.message ? `לא ניתן לשמור את האירוע. ${error.message}` : 'לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
