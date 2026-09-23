@@ -524,17 +524,28 @@ function App() {
     setIsDownloadDialogOpen(false)
   }
 
+  const accountLabel = !isAuthenticated
+    ? 'התחבר למערכת'
+    : userRole === 'super_user'
+      ? 'מחובר כמנהל על'
+      : userRole === 'manager'
+        ? 'מחובר כמנהל'
+        : 'מחובר כמשתמש'
+
   return (
     <main className="app-shell">
       <header className="topbar">
         <div className="brand-block">
           <button
-            className={`brand-logo-button ${isAuthenticated ? 'admin-active' : ''}`}
+            className={`account-button ${isAuthenticated ? 'admin-active' : ''}`}
             type="button"
             onClick={requestAdminAccess}
             title={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
             aria-label={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
-          ><img src="/logo.png" alt="Carmit Vaknin Software" /></button>
+          >
+            <span className="user-icon" aria-hidden="true" />
+            <span>{accountLabel}</span>
+          </button>
           <h1 className={isAdmin ? 'admin-mode-title' : ''}>לוח אירועים שנת בת מצווה</h1>
         </div>
         {isAuthenticated && <button className="primary-button" onClick={() => { setSelectedEventDate(''); setIsFormOpen(true) }}>
