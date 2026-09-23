@@ -629,6 +629,11 @@ function App() {
         </div>
       </section>
 
+      <footer className="software-credit" dir="ltr">
+        <span>© Carmit Vaknin Software</span>
+        <img src="/logo.png" alt="" aria-hidden="true" />
+      </footer>
+
       {selectedEvent && (
         <div className="modal-backdrop event-details-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedEvent(null)}>
           <section className="event-details-card" role="dialog" aria-modal="true" aria-labelledby="event-details-title">
