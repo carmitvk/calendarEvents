@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <defs>
+    <linearGradient id="ringGrad" x1="140" y1="140" x2="1060" y2="1060" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#63C7F2"/>
+      <stop offset="0.5" stop-color="#8798F0"/>
+      <stop offset="1" stop-color="#C78AF0"/>
+    </linearGradient>
+    <linearGradient id="cGrad" x1="320" y1="260" x2="650" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#59C9F2"/>
+      <stop offset="0.55" stop-color="#557EEA"/>
+      <stop offset="1" stop-color="#A66BEA"/>
+    </linearGradient>
+    <linearGradient id="vGrad" x1="520" y1="400" x2="920" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4FBDF0"/>
+      <stop offset="0.45" stop-color="#4C70DD"/>
+      <stop offset="1" stop-color="#C07CEA"/>
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="50%" cy="42%" r="65%">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F5F7FF"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="#FFFFFF"/>
+
+  <circle cx="600" cy="600" r="545" fill="url(#bgGlow)" stroke="url(#ringGrad)" stroke-width="26"/>
+
+  <!-- Stylized C -->
+  <path d="M680 300
+           C630 255 565 230 490 230
+           C320 230 215 350 215 505
+           C215 670 330 760 480 760
+           C545 760 600 742 650 710
+           L590 615
+           C560 632 525 642 488 642
+           C395 642 330 588 330 500
+           C330 414 394 350 487 350
+           C545 350 590 370 625 406
+           Z"
+        fill="url(#cGrad)"/>
+
+  <!-- Stylized V -->
+  <path d="M470 420
+           C525 420 568 435 600 465
+           L735 650
+           C748 668 762 668 775 647
+           L908 405
+           L1035 405
+           L835 760
+           C812 802 783 822 745 822
+           C706 822 675 800 650 765
+           Z"
+        fill="url(#vGrad)"/>
+
+  <!-- Inner highlight -->
+  <path d="M515 438 L742 736" stroke="#BFD8FF" stroke-width="24" stroke-linecap="round" opacity="0.38"/>
+
+  <!-- Brand text -->
+  <text x="600" y="905" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="72" letter-spacing="16"
+        fill="#34457F">CARMIT VAKNIN</text>
+
+  <line x1="245" y1="995" x2="345" y2="995" stroke="#91A7F2" stroke-width="8" stroke-linecap="round"/>
+  <text x="600" y="1018" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="48" letter-spacing="14"
+        fill="#7062C9">SOFTWARE</text>
+  <line x1="855" y1="995" x2="955" y2="995" stroke="#B58AE8" stroke-width="8" stroke-linecap="round"/>
+</svg>

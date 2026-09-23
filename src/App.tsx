@@ -745,7 +745,7 @@ function App() {
 
       <footer className="software-credit" dir="ltr">
         <span>© Carmit Vaknin Software</span>
-        <img src="/logo.png" alt="" aria-hidden="true" />
+        <img src="/logo_cv_sw.svg" alt="" aria-hidden="true" />
       </footer>
 
       {selectedEvent && (
