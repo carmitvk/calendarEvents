@@ -536,16 +536,25 @@ function App() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand-block">
-          <button
-            className={`account-button ${isAuthenticated ? 'admin-active' : ''}`}
-            type="button"
-            onClick={requestAdminAccess}
-            title={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
-            aria-label={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
-          >
-            <span className="user-icon" aria-hidden="true" />
-            <span>{accountLabel}</span>
-          </button>
+          <div className="brand-identity">
+            <button
+              className={`account-button ${isAuthenticated ? 'admin-active' : ''}`}
+              type="button"
+              onClick={requestAdminAccess}
+              title={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
+              aria-label={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
+            >
+              <span className="user-icon" aria-hidden="true" />
+              <span>{accountLabel}</span>
+            </button>
+            <button
+              className="brand-logo-button"
+              type="button"
+              onClick={requestAdminAccess}
+              title={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
+              aria-label={isAuthenticated ? 'יציאה מהמערכת' : 'התחברות למערכת'}
+            ><img src="/logo.png" alt="Carmit Vaknin Software" /></button>
+          </div>
           <h1 className={isAdmin ? 'admin-mode-title' : ''}>לוח אירועים שנת בת מצווה</h1>
         </div>
         {isAuthenticated && <button className="primary-button" onClick={() => { setSelectedEventDate(''); setIsFormOpen(true) }}>
