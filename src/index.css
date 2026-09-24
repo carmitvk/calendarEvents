@@ -112,7 +112,7 @@ h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3
 .event-limit-card p { margin-bottom: 22px; line-height: 1.8; }
 .event-limit-card strong { color: #41216e; font-size: 18px; }
 .event-limit-card .cancel-button { border: 0; color: #54356f; background: linear-gradient(90deg, #c3a4ff, #c3e982); }
-.confirmation-icon { width: 42px; height: 42px; display: grid; place-items: center; margin: 0 auto 12px; border-radius: 50%; color: #fff; background: #d95b8f; font-size: 25px; font-weight: 800; }
+.confirmation-icon { width: 42px; height: 42px; display: grid; place-items: center; margin: 0 auto 12px; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #b9a0f3, #dff3ad); font-size: 25px; font-weight: 800; }
 .confirmation-card h2 { margin: 0; color: #41216e; font-family: 'Playfair Display', serif; font-size: 28px; }
 .confirmation-card p { margin: 10px 0 24px; color: #806f8f; font-size: 15px; }
 .confirmation-actions { display: flex; justify-content: center; gap: 10px; }
