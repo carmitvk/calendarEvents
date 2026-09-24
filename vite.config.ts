@@ -34,13 +34,19 @@ function isValidIsraeliId(value: string) {
   }, 0) % 10 === 0
 }
 
+function normalizeLocalId(value: string) {
+  const digits = value.replace(/[\s-]/g, '')
+  return /^\d{8}$/.test(digits) ? `0${digits}` : digits
+}
+
 function localLogin(password: string) {
+  const normalizedPassword = normalizeLocalId(password)
   const codes = fs.readFileSync(adminPasswordPath, 'utf8').split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
   const managerCode = codes[0] || ''
   const superUserCode = codes[1] || ''
-  const role = password === managerCode ? 'manager' : password === superUserCode ? 'super_user' : 'user'
-  if (role === 'user' && !isValidIsraeliId(password)) return null
-  const session = { role, userId: password }
+  const role = normalizedPassword === managerCode ? 'manager' : normalizedPassword === superUserCode ? 'super_user' : 'user'
+  if (role === 'user' && !isValidIsraeliId(normalizedPassword)) return null
+  const session = { role, userId: normalizedPassword }
   const payload = Buffer.from(JSON.stringify(session)).toString('base64url')
   const secret = process.env.AUTH_SECRET || `${managerCode}:${superUserCode}:calendar-access`
   const signature = createHmac('sha256', secret).update(payload).digest('base64url')

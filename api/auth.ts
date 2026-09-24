@@ -1,6 +1,11 @@
 export type UserRole = 'user' | 'manager' | 'super_user'
 export type Session = { role: UserRole; userId: string }
 
+function normalizeId(value: string) {
+  const digits = value.replace(/[\s-]/g, '')
+  return /^\d{8}$/.test(digits) ? `0${digits}` : digits
+}
+
 function accessCodes() {
   return { manager: process.env.ADMIN_PASSWORD || '', superUser: process.env.SUPER_USER_PASSWORD || '' }
 }
@@ -55,7 +60,8 @@ export async function readSession(value: string | undefined): Promise<Session | 
 }
 
 export function authenticateCode(code: string) {
+  const normalizedCode = normalizeId(code)
   const codes = accessCodes()
-  const role: UserRole = code === codes.manager ? 'manager' : code === codes.superUser ? 'super_user' : 'user'
-  return role === 'user' && !isValidIsraeliId(code) ? null : { role, userId: code }
+  const role: UserRole = normalizedCode === codes.manager ? 'manager' : normalizedCode === codes.superUser ? 'super_user' : 'user'
+  return role === 'user' && !isValidIsraeliId(normalizedCode) ? null : { role, userId: normalizedCode }
 }
