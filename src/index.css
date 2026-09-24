@@ -62,8 +62,8 @@ h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3
 .today.available { box-shadow: inset 0 0 0 2px #9fc84c; }
 .hebrew-date { display: block; color: #8f829f; font-size: 11px; white-space: nowrap; }
 .event-pill { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px; padding: 3px 6px; background: linear-gradient(100deg, #c7a9f3, #eef8d5); color: #674493; font-size: 12px; }
-.delete-event-button { margin-top: 1px; border: 0; border-radius: 8px; padding: 5px 9px; color: #fff; background: #d95b8f; font-size: 12px; font-weight: 700; cursor: pointer; }
-.delete-event-button:hover { background: #bd3f73; }
+.delete-event-button { margin-top: 1px; border: 0; border-radius: 8px; padding: 5px 9px; color: #fff; background: linear-gradient(100deg, #8bc8f4, #9a7bd8); font-size: 12px; font-weight: 700; cursor: pointer; }
+.delete-event-button:hover { background: linear-gradient(100deg, #70b7e8, #8565c7); }
 .footer-note { max-width: 1120px; margin: 18px auto 0; color: #777889; font-size: 13px; display: flex; align-items: center; gap: 20px; }
 .software-credit { max-width: 1120px; margin: 12px auto 0; display: flex; align-items: center; justify-content: center; gap: 4px; color: #72b9e5; font-size: 12px; line-height: 1; }
 .software-credit img { width: 12px; height: 12px; object-fit: cover; }

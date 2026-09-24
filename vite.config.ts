@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { createHmac } from 'node:crypto'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import * as XLSX from 'xlsx'
@@ -24,6 +25,27 @@ const templatePath = fs.existsSync(requestedTemplatePath)
   : fs.existsSync(legacyTemplatePath)
     ? legacyTemplatePath
     : workbookPath
+
+function isValidIsraeliId(value: string) {
+  if (!/^\d{9}$/.test(value)) return false
+  return value.split('').reduce((sum, digit, index) => {
+    const product = Number(digit) * (index % 2 + 1)
+    return sum + (product > 9 ? product - 9 : product)
+  }, 0) % 10 === 0
+}
+
+function localLogin(password: string) {
+  const codes = fs.readFileSync(adminPasswordPath, 'utf8').split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
+  const managerCode = codes[0] || ''
+  const superUserCode = codes[1] || ''
+  const role = password === managerCode ? 'manager' : password === superUserCode ? 'super_user' : 'user'
+  if (role === 'user' && !isValidIsraeliId(password)) return null
+  const session = { role, userId: password }
+  const payload = Buffer.from(JSON.stringify(session)).toString('base64url')
+  const secret = process.env.AUTH_SECRET || `${managerCode}:${superUserCode}:calendar-access`
+  const signature = createHmac('sha256', secret).update(payload).digest('base64url')
+  return { valid: true, ...session, token: `${payload}.${signature}` }
+}
 
 if (!fs.existsSync(workbookPath) && fs.existsSync(path.join(legacyWorkbookDir, workbookFileName))) {
   fs.copyFileSync(path.join(legacyWorkbookDir, workbookFileName), workbookPath)
@@ -227,10 +249,9 @@ function workbookApi() {
           request.on('end', () => {
             try {
               const payload = JSON.parse(body) as { password?: string }
-              const storedPassword = fs.readFileSync(adminPasswordPath, 'utf8').trim()
-              const isValid = typeof payload.password === 'string' && payload.password === storedPassword
+              const result = typeof payload.password === 'string' ? localLogin(payload.password) : null
               response.setHeader('Content-Type', 'application/json')
-              response.end(JSON.stringify({ valid: isValid }))
+              response.end(JSON.stringify(result || { valid: false }))
             } catch {
               response.statusCode = 400
               response.end(JSON.stringify({ error: 'Invalid password request' }))
@@ -241,6 +262,72 @@ function workbookApi() {
         if (request.url === '/api/workbook' && request.method === 'GET') {
           response.setHeader('Content-Type', 'application/vnd.ms-excel.sheet.macroEnabled.12')
           response.end(fs.readFileSync(workbookPath))
+          return
+        }
+        if (request.url === '/api/events' && request.method === 'GET') {
+          try {
+            response.setHeader('Content-Type', 'application/json')
+            response.end(JSON.stringify(readWorkbookEvents(fs.readFileSync(workbookPath)).map((event, index) => ({ ...event, id: index + 1 }))))
+          } catch (error) {
+            response.statusCode = 500
+            response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Workbook read failed' }))
+          }
+          return
+        }
+        if (request.url === '/api/events' && request.method === 'POST') {
+          let body = ''
+          request.on('data', (chunk: Buffer) => { body += chunk.toString() })
+          request.on('end', () => {
+            try {
+              const payload = JSON.parse(body) as { date?: string; title?: string; className?: string }
+              if (!payload.date || !payload.title || !payload.className) {
+                response.statusCode = 400
+                response.end(JSON.stringify({ error: 'Missing event data' }))
+                return
+              }
+              void updateWorkbookEvents([{ date: payload.date, title: payload.title, className: payload.className }])
+                .then(() => {
+                  response.statusCode = 201
+                  response.setHeader('Content-Type', 'application/json')
+                  response.end(JSON.stringify({ ok: true }))
+                })
+                .catch((error: unknown) => {
+                  response.statusCode = 500
+                  response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Workbook update failed' }))
+                })
+            } catch {
+              response.statusCode = 400
+              response.end(JSON.stringify({ error: 'Invalid JSON' }))
+            }
+          })
+          return
+        }
+        if (request.url === '/api/events' && request.method === 'DELETE') {
+          let body = ''
+          request.on('data', (chunk: Buffer) => { body += chunk.toString() })
+          request.on('end', () => {
+            try {
+              const payload = JSON.parse(body) as { date?: string }
+              if (!payload.date) {
+                response.statusCode = 400
+                response.end(JSON.stringify({ error: 'Missing event date' }))
+                return
+              }
+              void deleteWorkbookEvent(payload.date)
+                .then(() => {
+                  response.statusCode = 200
+                  response.setHeader('Content-Type', 'application/json')
+                  response.end(JSON.stringify({ ok: true }))
+                })
+                .catch((error: unknown) => {
+                  response.statusCode = 500
+                  response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Workbook update failed' }))
+                })
+            } catch {
+              response.statusCode = 400
+              response.end(JSON.stringify({ error: 'Invalid JSON' }))
+            }
+          })
           return
         }
         if (request.url === '/api/workbook/event' && request.method === 'POST') {
