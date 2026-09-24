@@ -563,7 +563,7 @@ function App() {
             <h2 id="password-title">התחברות למערכת</h2>
             <form onSubmit={verifyAdminPassword}>
               <label>
-                סיסמה
+                ת.ז של בעל האירוע
                 <span className="password-input-wrap">
                   <input
                     type={showAdminPassword ? 'text' : 'password'}
