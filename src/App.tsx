@@ -419,6 +419,11 @@ function App() {
     }
   }
 
+  function closeDeleteConfirmation() {
+    setDeleteConfirmDate('')
+    setDeleteCandidateDate('')
+  }
+
   function loadWorkbook(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
@@ -605,14 +610,14 @@ function App() {
       )}
 
       {deleteConfirmDate && (
-        <div className="modal-backdrop delete-confirm-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteConfirmDate('')}>
+        <div className="modal-backdrop delete-confirm-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeDeleteConfirmation()}>
           <section className="confirmation-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-            <button className="close-button delete-confirm-close-button" type="button" onClick={() => setDeleteConfirmDate('')} aria-label="סגירת חלון האישור">×</button>
+            <button className="close-button delete-confirm-close-button" type="button" onClick={closeDeleteConfirmation} aria-label="סגירת חלון האישור">×</button>
             <div className="confirmation-icon">!</div>
             <h2 id="delete-title">מחיקת אירוע</h2>
             <p>האם למחוק את האירוע מהלוח ומהאקסל?</p>
             <div className="confirmation-actions">
-              <button type="button" className="cancel-button" onClick={() => setDeleteConfirmDate('')}>ביטול</button>
+              <button type="button" className="cancel-button" onClick={closeDeleteConfirmation}>ביטול</button>
               <button type="button" className="delete-confirm-button" onClick={() => void deleteEvent(deleteConfirmDate)}>מחק</button>
             </div>
           </section>
