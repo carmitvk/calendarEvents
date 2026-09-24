@@ -672,7 +672,7 @@ function App() {
           <div className="excel-view" role="region" aria-label="נתוני האירועים בתצוגת אקסל">
             <table className="excel-table">
               <thead>
-                <tr><th>תאריך לועזי</th><th>שם החוגגת</th><th>כיתה</th></tr>
+                <tr><th>תאריך לועזי</th><th>שם האירוע</th><th>כיתה</th></tr>
               </thead>
               <tbody>
                 {events.filter((event) => event.title.trim()).map((event) => (
