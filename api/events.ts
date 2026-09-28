@@ -39,6 +39,7 @@ async function loadSheetEvents() {
     title: String(row[titleIndex] || '').trim(),
     className: String(row[classIndex] || '').trim(),
     ownerId: ownerIndex >= 0 ? String(row[ownerIndex] || '').trim() : '',
+    source: 'excel',
   })).filter((event) => event.date && event.title)
 }
 

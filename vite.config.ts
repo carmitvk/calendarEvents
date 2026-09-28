@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { createHmac } from 'node:crypto'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
+import { authenticateCode, createSessionToken, readSession } from './api/auth.js'
 
 const primaryWorkbookDir = path.resolve(process.cwd(), 'xmlfiles')
 const legacyWorkbookDir = path.resolve(process.cwd(), 'xlsfiles')
@@ -19,39 +19,11 @@ const workbookPath = path.join(
 )
 const requestedTemplatePath = path.join(primaryWorkbookDir, templateFileName)
 const legacyTemplatePath = path.join(legacyWorkbookDir, templateFileName)
-const adminPasswordPath = path.join(primaryWorkbookDir, 'admin-pwd.txt')
 const templatePath = fs.existsSync(requestedTemplatePath)
   ? requestedTemplatePath
   : fs.existsSync(legacyTemplatePath)
     ? legacyTemplatePath
     : workbookPath
-
-function isValidIsraeliId(value: string) {
-  if (!/^\d{9}$/.test(value)) return false
-  return value.split('').reduce((sum, digit, index) => {
-    const product = Number(digit) * (index % 2 + 1)
-    return sum + (product > 9 ? product - 9 : product)
-  }, 0) % 10 === 0
-}
-
-function normalizeLocalId(value: string) {
-  const digits = value.replace(/[\s-]/g, '')
-  return /^\d{8}$/.test(digits) ? `0${digits}` : digits
-}
-
-function localLogin(password: string) {
-  const normalizedPassword = normalizeLocalId(password)
-  const codes = fs.readFileSync(adminPasswordPath, 'utf8').split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
-  const managerCode = codes[0] || ''
-  const superUserCode = codes[1] || ''
-  const role = normalizedPassword === managerCode ? 'manager' : normalizedPassword === superUserCode ? 'super_user' : 'user'
-  if (role === 'user' && !isValidIsraeliId(normalizedPassword)) return null
-  const session = { role, userId: normalizedPassword }
-  const payload = Buffer.from(JSON.stringify(session)).toString('base64url')
-  const secret = process.env.AUTH_SECRET || `${managerCode}:${superUserCode}:calendar-access`
-  const signature = createHmac('sha256', secret).update(payload).digest('base64url')
-  return { valid: true, ...session, token: `${payload}.${signature}` }
-}
 
 if (!fs.existsSync(workbookPath) && fs.existsSync(path.join(legacyWorkbookDir, workbookFileName))) {
   fs.copyFileSync(path.join(legacyWorkbookDir, workbookFileName), workbookPath)
@@ -111,22 +83,26 @@ function escapeXml(value: string) {
 function readWorkbookEvents(buffer: Buffer) {
   const workbook = XLSX.read(buffer, { type: 'buffer', bookVBA: true })
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
+  if (!sheet) return []
   const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: true })
   const headerIndex = rows.findIndex((row) => row.some((cell) => String(cell || '').includes('תאריך לועזי')))
-  if (!sheet || headerIndex < 0) return []
+  if (headerIndex < 0) return []
   const headers = rows[headerIndex].map((cell) => String(cell || ''))
   const dateIndex = headers.findIndex((header) => header.includes('תאריך לועזי'))
   const titleIndex = headers.findIndex((header) => header.includes('שם החוגגת'))
   const classIndex = headers.findIndex((header) => header.includes('כיתה'))
+  const ownerIndex = headers.findIndex((header) => header.includes('תז') || header.includes('ת.ז') || header.includes('ת״ז'))
   return rows.slice(headerIndex + 1).map((row, index) => ({
-    rowNumber: headerIndex + index + 2,
-    date: dateIndex >= 0 ? String(row[dateIndex] || '') : '',
-    title: titleIndex >= 0 ? String(row[titleIndex] || '') : '',
-    className: classIndex >= 0 ? String(row[classIndex] || '') : '',
+    id: headerIndex + index + 2,
+    date: dateIndex >= 0 ? normalizeDateKey(row[dateIndex]) : '',
+    title: titleIndex >= 0 ? String(row[titleIndex] || '').trim() : '',
+    className: classIndex >= 0 ? String(row[classIndex] || '').trim() : '',
+    ownerId: ownerIndex >= 0 ? String(row[ownerIndex] || '').trim() : '',
+    source: 'excel',
   })).filter((item) => item.date && item.title)
 }
 
-async function updateWorkbookEvents(events: Array<{ date: string; title: string; className: string }>) {
+async function updateWorkbookEvents(events: Array<{ date: string; title: string; className: string; ownerId?: string }>) {
   const workbookBuffer = fs.readFileSync(workbookPath)
   const workbook = XLSX.read(workbookBuffer, { type: 'buffer', bookVBA: true })
   const sheetName = workbook.SheetNames[0]
@@ -147,9 +123,14 @@ async function updateWorkbookEvents(events: Array<{ date: string; title: string;
   const dateIndex = headers.findIndex((header) => header.includes('תאריך לועזי'))
   const titleIndex = headers.findIndex((header) => header.includes('שם החוגגת'))
   const classIndex = headers.findIndex((header) => header.includes('כיתה'))
+  let ownerIndex = headers.findIndex((header) => header.includes('תז') || header.includes('ת.ז') || header.includes('ת״ז'))
 
   if (dateIndex < 0 || titleIndex < 0 || classIndex < 0) {
     throw new Error('Required columns not found in workbook')
+  }
+  if (ownerIndex < 0) {
+    ownerIndex = headers.length
+    sheet[XLSX.utils.encode_cell({ r: headerIndex, c: ownerIndex })] = { t: 's', v: 'ת״ז' }
   }
 
   const rawRows = rows.slice(headerIndex + 1)
@@ -182,10 +163,14 @@ async function updateWorkbookEvents(events: Array<{ date: string; title: string;
 
     const classCell = XLSX.utils.encode_cell({ r: targetRow, c: classIndex })
     sheet[classCell] = { t: 's', v: event.className || '' }
+
+    const ownerCell = XLSX.utils.encode_cell({ r: targetRow, c: ownerIndex })
+    sheet[ownerCell] = { t: 's', v: event.ownerId || '' }
   })
 
-  const range = sheet['!ref'] ? XLSX.utils.decode_range(sheet['!ref']) : { s: { c: 0, r: 0 }, e: { c: classIndex, r: nextRow } }
+  const range = sheet['!ref'] ? XLSX.utils.decode_range(sheet['!ref']) : { s: { c: 0, r: 0 }, e: { c: ownerIndex, r: nextRow } }
   range.e.r = Math.max(range.e.r, nextRow)
+  range.e.c = Math.max(range.e.c, ownerIndex)
   sheet['!ref'] = XLSX.utils.encode_range(range)
   sheet['!cols'] = sheet['!cols'] || []
   sheet['!cols'][dateIndex] = { ...(sheet['!cols'][dateIndex] || {}), wch: 14 }
@@ -245,19 +230,28 @@ function workbookApi() {
     configureServer(server: { middlewares: { use: (handler: (request: any, response: any, next: () => void) => void) => void } }) {
       void updateWorkbookEvents([]).catch(() => undefined)
       server.middlewares.use((request, response, next) => {
-        if (request.url === '/api/admin/login' && request.method === 'POST') {
+        const pathname = new URL(request.url || '/', 'http://localhost').pathname
+        if (pathname === '/api/events' && request.method === 'GET') {
+          response.setHeader('Content-Type', 'application/json; charset=utf-8')
+          response.setHeader('Cache-Control', 'no-store')
+          response.end(JSON.stringify(readWorkbookEvents(fs.readFileSync(workbookPath))))
+          return
+        }
+        if (pathname === '/api/admin/login' && request.method === 'POST') {
           let body = ''
           request.on('data', (chunk: Buffer) => { body += chunk.toString() })
           request.on('error', (error: Error) => {
             response.statusCode = 400
             response.end(JSON.stringify({ error: error.message }))
           })
-          request.on('end', () => {
+          request.on('end', async () => {
             try {
               const payload = JSON.parse(body) as { password?: string }
-              const result = typeof payload.password === 'string' ? localLogin(payload.password) : null
+              const session = typeof payload.password === 'string' ? authenticateCode(payload.password) : null
               response.setHeader('Content-Type', 'application/json')
-              response.end(JSON.stringify(result || { valid: false }))
+              response.end(JSON.stringify(session
+                ? { valid: true, ...session, token: await createSessionToken(session) }
+                : { valid: false }))
             } catch {
               response.statusCode = 400
               response.end(JSON.stringify({ error: 'Invalid password request' }))
@@ -265,75 +259,71 @@ function workbookApi() {
           })
           return
         }
+        if (pathname === '/api/events' && (request.method === 'POST' || request.method === 'DELETE')) {
+          let body = ''
+          request.on('data', (chunk: Buffer) => { body += chunk.toString() })
+          request.on('error', (error: Error) => {
+            response.statusCode = 400
+            response.end(JSON.stringify({ error: error.message }))
+          })
+          request.on('end', async () => {
+            response.setHeader('Content-Type', 'application/json; charset=utf-8')
+            try {
+              const authorization = Array.isArray(request.headers.authorization) ? request.headers.authorization[0] : request.headers.authorization
+              const session = await readSession(authorization?.replace(/^Bearer\s+/i, ''))
+              if (!session) {
+                response.statusCode = 401
+                response.end(JSON.stringify({ error: 'Login required' }))
+                return
+              }
+              const payload = JSON.parse(body) as { date?: string; title?: string; className?: string }
+              const existingEvents = readWorkbookEvents(fs.readFileSync(workbookPath))
+              if (request.method === 'POST') {
+                if (!payload.date || !payload.title || !payload.className) {
+                  response.statusCode = 400
+                  response.end(JSON.stringify({ error: 'Incomplete event' }))
+                  return
+                }
+                const sharedClasses = new Set(['שכבתי', 'בית ספרי', 'בנות השכבה'])
+                if (session.role === 'user' && sharedClasses.has(payload.className)) {
+                  response.statusCode = 403
+                  response.end(JSON.stringify({ error: 'Only managers can create shared events' }))
+                  return
+                }
+                const existingUserEvent = session.role === 'user' ? existingEvents.find((item) => item.ownerId === session.userId) : undefined
+                if (existingUserEvent) {
+                  response.statusCode = 403
+                  response.end(JSON.stringify({ error: 'A regular user may create only one event', existingDate: existingUserEvent.date }))
+                  return
+                }
+                await updateWorkbookEvents([{ date: payload.date, title: payload.title, className: payload.className, ownerId: session.userId }])
+                response.statusCode = 201
+                response.end(JSON.stringify({ ok: true }))
+                return
+              }
+              const existingEvent = existingEvents.find((item) => item.date === payload.date)
+              if (!existingEvent) {
+                response.statusCode = 404
+                response.end(JSON.stringify({ error: 'Event not found' }))
+                return
+              }
+              if (session.role !== 'super_user' && existingEvent.ownerId !== session.userId) {
+                response.statusCode = 403
+                response.end(JSON.stringify({ error: 'You can delete only your own event' }))
+                return
+              }
+              await deleteWorkbookEvent(existingEvent.date)
+              response.end(JSON.stringify({ ok: true }))
+            } catch (error) {
+              response.statusCode = 400
+              response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Invalid request' }))
+            }
+          })
+          return
+        }
         if (request.url === '/api/workbook' && request.method === 'GET') {
           response.setHeader('Content-Type', 'application/vnd.ms-excel.sheet.macroEnabled.12')
           response.end(fs.readFileSync(workbookPath))
-          return
-        }
-        if (request.url === '/api/events' && request.method === 'GET') {
-          try {
-            response.setHeader('Content-Type', 'application/json')
-            response.end(JSON.stringify(readWorkbookEvents(fs.readFileSync(workbookPath)).map((event, index) => ({ ...event, id: index + 1 }))))
-          } catch (error) {
-            response.statusCode = 500
-            response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Workbook read failed' }))
-          }
-          return
-        }
-        if (request.url === '/api/events' && request.method === 'POST') {
-          let body = ''
-          request.on('data', (chunk: Buffer) => { body += chunk.toString() })
-          request.on('end', () => {
-            try {
-              const payload = JSON.parse(body) as { date?: string; title?: string; className?: string }
-              if (!payload.date || !payload.title || !payload.className) {
-                response.statusCode = 400
-                response.end(JSON.stringify({ error: 'Missing event data' }))
-                return
-              }
-              void updateWorkbookEvents([{ date: payload.date, title: payload.title, className: payload.className }])
-                .then(() => {
-                  response.statusCode = 201
-                  response.setHeader('Content-Type', 'application/json')
-                  response.end(JSON.stringify({ ok: true }))
-                })
-                .catch((error: unknown) => {
-                  response.statusCode = 500
-                  response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Workbook update failed' }))
-                })
-            } catch {
-              response.statusCode = 400
-              response.end(JSON.stringify({ error: 'Invalid JSON' }))
-            }
-          })
-          return
-        }
-        if (request.url === '/api/events' && request.method === 'DELETE') {
-          let body = ''
-          request.on('data', (chunk: Buffer) => { body += chunk.toString() })
-          request.on('end', () => {
-            try {
-              const payload = JSON.parse(body) as { date?: string }
-              if (!payload.date) {
-                response.statusCode = 400
-                response.end(JSON.stringify({ error: 'Missing event date' }))
-                return
-              }
-              void deleteWorkbookEvent(payload.date)
-                .then(() => {
-                  response.statusCode = 200
-                  response.setHeader('Content-Type', 'application/json')
-                  response.end(JSON.stringify({ ok: true }))
-                })
-                .catch((error: unknown) => {
-                  response.statusCode = 500
-                  response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Workbook update failed' }))
-                })
-            } catch {
-              response.statusCode = 400
-              response.end(JSON.stringify({ error: 'Invalid JSON' }))
-            }
-          })
           return
         }
         if (request.url === '/api/workbook/event' && request.method === 'POST') {

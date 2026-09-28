@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hebcal/core": "^6.9.3",
     "@vitejs/plugin-react": "latest",
     "jszip": "^3.10.2",
     "react": "latest",

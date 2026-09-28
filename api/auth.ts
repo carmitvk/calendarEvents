@@ -1,6 +1,9 @@
 export type UserRole = 'user' | 'manager' | 'super_user'
 export type Session = { role: UserRole; userId: string }
 
+export const MANAGER_ID = '012012012'
+export const SUPER_USER_ID = '077077077'
+
 function accessCodes() {
   return { manager: process.env.ADMIN_PASSWORD || '', superUser: process.env.SUPER_USER_PASSWORD || '' }
 }
@@ -55,7 +58,6 @@ export async function readSession(value: string | undefined): Promise<Session | 
 }
 
 export function authenticateCode(code: string) {
-  const codes = accessCodes()
-  const role: UserRole = code === codes.manager ? 'manager' : code === codes.superUser ? 'super_user' : 'user'
+  const role: UserRole = code === SUPER_USER_ID ? 'super_user' : code === MANAGER_ID ? 'manager' : 'user'
   return role === 'user' && !isValidIsraeliId(code) ? null : { role, userId: code }
 }

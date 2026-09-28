@@ -1,4 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { HebrewCalendar } from '@hebcal/core'
 import * as XLSX from 'xlsx'
 
 type EventItem = {
@@ -7,6 +8,7 @@ type EventItem = {
   className: string
   date: string
   ownerId?: string
+  source?: 'excel'
 }
 
 type UserRole = 'guest' | 'user' | 'manager' | 'super_user'
@@ -26,6 +28,7 @@ const monthNames = [
   'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר',
 ]
 const dayNames = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש']
+const holidayMapsByYear = new Map<number, Map<string, string[]>>()
 
 const today = new Date()
 today.setHours(0, 0, 0, 0)
@@ -35,6 +38,31 @@ function toDateKey(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function getHolidayMap(year: number) {
+  const cachedMap = holidayMapsByYear.get(year)
+  if (cachedMap) return cachedMap
+
+  const holidayMap = new Map<string, string[]>()
+  HebrewCalendar.calendar({
+    year,
+    il: true,
+    locale: 'he',
+    noRoshChodesh: true,
+    noSpecialShabbat: true,
+    omer: false,
+    sedrot: false,
+    candlelighting: false,
+  }).forEach((holiday) => {
+    const dateKey = toDateKey(holiday.getDate().greg())
+    const name = holiday.render('he').replace(/[\u0591-\u05BD\u05BF-\u05C7]/g, '')
+    if (name.includes('סליחות')) return
+    const names = holidayMap.get(dateKey) || []
+    if (!names.includes(name)) holidayMap.set(dateKey, [...names, name])
+  })
+  holidayMapsByYear.set(year, holidayMap)
+  return holidayMap
 }
 
 function formatDateForDisplay(dateKey: string) {
@@ -154,6 +182,7 @@ function readEventsFromWorkbook(workbook: XLSX.WorkBook) {
     title: titleIndex >= 0 ? String(row[titleIndex] || '').trim() : '',
     className: classIndex >= 0 ? String(row[classIndex] || '').trim() : '',
     date: dateIndex >= 0 ? normalizeExcelDate(row[dateIndex]) : '',
+    source: 'excel' as const,
   })).filter((item) => item.title && item.date)
 }
 
@@ -174,6 +203,7 @@ function EventDatePicker({
   const firstDay = new Date(pickerMonth.getFullYear(), pickerMonth.getMonth(), 1)
   const dayOffset = firstDay.getDay()
   const numberOfDays = new Date(pickerMonth.getFullYear(), pickerMonth.getMonth() + 1, 0).getDate()
+  const holidays = useMemo(() => getHolidayMap(pickerMonth.getFullYear()), [pickerMonth])
   const days: (Date | null)[] = []
 
   for (let index = 0; index < dayOffset; index += 1) days.push(null)
@@ -222,11 +252,13 @@ function EventDatePicker({
           const dateKey = toDateKey(date)
           const isPast = date < today
           const isOccupied = events.some((event) => event.date === dateKey)
+          const isExcelOccupied = events.some((event) => event.date === dateKey && event.source === 'excel')
           const isDisabled = isPast || isOccupied
+          const holidayNames = holidays.get(dateKey) || []
           return (
             <button
               type="button"
-              className={`picker-day ${isOccupied ? 'occupied' : 'available'} ${selectedDate === dateKey ? 'selected' : ''}`}
+              className={`picker-day ${isOccupied ? 'occupied' : 'available'} ${isExcelOccupied ? 'excel-occupied' : ''} ${selectedDate === dateKey ? 'selected' : ''}`}
               key={dateKey}
               disabled={isDisabled}
               onTouchEnd={(event) => {
@@ -235,10 +267,11 @@ function EventDatePicker({
                 selectDate(dateKey)
               }}
               onClick={() => selectDate(dateKey)}
-              title={isOccupied ? 'התאריך כבר תפוס' : undefined}
+              title={[isOccupied ? 'התאריך כבר תפוס' : '', ...holidayNames].filter(Boolean).join(' · ') || undefined}
             >
               <span className="picker-gregorian">{date.getDate()}</span>
               <span className="picker-hebrew">{getHebrewDate(date)}</span>
+              {holidayNames.length > 0 && <span className="picker-holiday">{holidayNames.join(' · ')}</span>}
             </button>
           )
         })}
@@ -254,6 +287,8 @@ function App() {
   const [events, setEvents] = useState<EventItem[]>([])
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
   const [selectedEventDate, setSelectedEventDate] = useState('')
+  const [eventTitle, setEventTitle] = useState('')
+  const [eventClassName, setEventClassName] = useState('')
   const [workbookState, setWorkbookState] = useState<WorkbookState | null>(null)
   const [excelFileHandle, setExcelFileHandle] = useState<ExcelFileHandle | null>(null)
   const [dateValidationAttempted, setDateValidationAttempted] = useState(false)
@@ -275,6 +310,11 @@ function App() {
   const pendingDeletedDates = useRef(new Set<string>())
   const isAuthenticated = userRole !== 'guest'
   const isAdmin = userRole === 'manager' || userRole === 'super_user'
+  const isEventFormComplete = Boolean(eventTitle.trim() && eventClassName && selectedEventDate)
+
+  function canDeleteEvent(event: EventItem) {
+    return userRole === 'super_user' || Boolean(isAuthenticated && event.ownerId && event.ownerId === sessionUserId)
+  }
 
   function applyWorkbook(workbook: XLSX.WorkBook, fileName: string) {
     setEvents(readEventsFromWorkbook(workbook))
@@ -302,6 +342,20 @@ function App() {
     return () => window.clearInterval(refreshTimer)
   }, [])
 
+  useEffect(() => {
+    if (!deleteCandidateDate) return
+
+    function hideDeleteButtonOutsideSelectedCell(event: PointerEvent) {
+      if (!(event.target instanceof Element)) return
+      const clickedCell = event.target.closest<HTMLElement>('.day-cell')
+      if (clickedCell?.dataset.date === deleteCandidateDate) return
+      setDeleteCandidateDate('')
+    }
+
+    document.addEventListener('pointerdown', hideDeleteButtonOutsideSelectedCell, true)
+    return () => document.removeEventListener('pointerdown', hideDeleteButtonOutsideSelectedCell, true)
+  }, [deleteCandidateDate])
+
   const calendarDays = useMemo(() => {
     const firstDay = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1)
     const dayOffset = firstDay.getDay()
@@ -315,11 +369,43 @@ function App() {
     while (days.length % 7 !== 0) days.push(null)
     return days
   }, [visibleMonth])
+  const holidays = useMemo(() => getHolidayMap(visibleMonth.getFullYear()), [visibleMonth])
+  const chronologicallySortedEvents = useMemo(
+    () => [...events].filter((event) => event.title.trim()).sort((first, second) => first.date.localeCompare(second.date)),
+    [events],
+  )
 
   function moveMonth(amount: number) {
     const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + amount, 1)
     const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     if (nextMonth >= currentMonth) setVisibleMonth(nextMonth)
+  }
+
+  async function openEventForm() {
+    if (userRole === 'user') {
+      let existingEvent = events.find((event) => event.ownerId === sessionUserId)
+      if (!existingEvent) {
+        try {
+          const response = await fetch(`/api/events?t=${Date.now()}`, { cache: 'no-store' })
+          if (response.ok) {
+            const latestEvents = await response.json() as EventItem[]
+            existingEvent = latestEvents.find((event) => event.ownerId === sessionUserId)
+          }
+        } catch {
+          // The API validates the same limit again when an event is submitted.
+        }
+      }
+      if (existingEvent) {
+        setEventLimitDate(existingEvent.date)
+        return
+      }
+    }
+    setEventTitle('')
+    setEventClassName('')
+    setSelectedEventDate('')
+    setValidationErrors({ title: false, className: false })
+    setDateValidationAttempted(false)
+    setIsFormOpen(true)
   }
 
   function addEvent(event: FormEvent<HTMLFormElement>) {
@@ -333,7 +419,7 @@ function App() {
     if (!title || !className || !date || events.some((event) => event.date === date)) return
 
     if (!isAuthenticated) return
-    const newEvent = { id: Date.now(), title, className, date, ownerId: sessionUserId }
+    const newEvent: EventItem = { id: Date.now(), title, className, date, ownerId: sessionUserId, source: 'excel' }
     const nextEvents = [...events, newEvent]
     setEvents(nextEvents)
     void fetch('/api/events', {
@@ -363,6 +449,8 @@ function App() {
       window.alert(error instanceof Error && error.message ? `לא ניתן לשמור את האירוע. ${error.message}` : 'לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
     })
     setSelectedEventDate('')
+    setEventTitle('')
+    setEventClassName('')
     setIsFormOpen(false)
     event.currentTarget.reset()
   }
@@ -417,11 +505,6 @@ function App() {
       setEvents(previousEvents)
       if (response.status === 403) setDeletePermissionError(true)
     }
-  }
-
-  function closeDeleteConfirmation() {
-    setDeleteConfirmDate('')
-    setDeleteCandidateDate('')
   }
 
   function loadWorkbook(event: ChangeEvent<HTMLInputElement>) {
@@ -555,7 +638,7 @@ function App() {
           </div>
           <h1 className={isAdmin ? 'admin-mode-title' : ''}>לוח אירועים שנת בת מצווה</h1>
         </div>
-        {isAuthenticated && <button className="primary-button" onClick={() => { setSelectedEventDate(''); setIsFormOpen(true) }}>
+        {isAuthenticated && <button className="primary-button" onClick={() => { void openEventForm() }}>
           <span className="plus-icon">+</span>
           שבץ אירוע
         </button>}
@@ -568,7 +651,7 @@ function App() {
             <h2 id="password-title">התחברות למערכת</h2>
             <form onSubmit={verifyAdminPassword}>
               <label>
-                ת.ז של בעל האירוע
+                סיסמה
                 <span className="password-input-wrap">
                   <input
                     type={showAdminPassword ? 'text' : 'password'}
@@ -610,14 +693,14 @@ function App() {
       )}
 
       {deleteConfirmDate && (
-        <div className="modal-backdrop delete-confirm-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeDeleteConfirmation()}>
+        <div className="modal-backdrop delete-confirm-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteConfirmDate('')}>
           <section className="confirmation-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-            <button className="close-button delete-confirm-close-button" type="button" onClick={closeDeleteConfirmation} aria-label="סגירת חלון האישור">×</button>
+            <button className="close-button delete-confirm-close-button" type="button" onClick={() => setDeleteConfirmDate('')} aria-label="סגירת חלון האישור">×</button>
             <div className="confirmation-icon">!</div>
             <h2 id="delete-title">מחיקת אירוע</h2>
             <p>האם למחוק את האירוע מהלוח ומהאקסל?</p>
             <div className="confirmation-actions">
-              <button type="button" className="cancel-button" onClick={closeDeleteConfirmation}>ביטול</button>
+              <button type="button" className="cancel-button" onClick={() => setDeleteConfirmDate('')}>ביטול</button>
               <button type="button" className="delete-confirm-button" onClick={() => void deleteEvent(deleteConfirmDate)}>מחק</button>
             </div>
           </section>
@@ -677,10 +760,10 @@ function App() {
           <div className="excel-view" role="region" aria-label="נתוני האירועים בתצוגת אקסל">
             <table className="excel-table">
               <thead>
-                <tr><th>תאריך לועזי</th><th>שם האירוע</th><th>כיתה</th></tr>
+                <tr><th>תאריך לועזי</th><th>שם החוגגת</th><th>כיתה</th></tr>
               </thead>
               <tbody>
-                {events.filter((event) => event.title.trim()).map((event) => (
+                {chronologicallySortedEvents.map((event) => (
                   <tr key={event.id}>
                     <td>{formatDateForDisplay(event.date)}</td>
                     <td>{event.title}</td>
@@ -701,13 +784,17 @@ function App() {
                 const dayEvents = date ? events.filter((item) => item.date === dateKey) : []
                 const isToday = dateKey === toDateKey(today)
                 const isOccupied = dayEvents.length > 0
+                const isExcelOccupied = dayEvents.some((item) => item.source === 'excel')
+                const canDeleteDayEvent = dayEvents.some(canDeleteEvent)
+                const holidayNames = date ? holidays.get(dateKey) || [] : []
                 return (
                   <div
-                    className={`day-cell ${!date ? 'empty' : isOccupied ? 'occupied' : 'available'} ${isToday ? 'today' : ''}`}
+                    className={`day-cell ${!date ? 'empty' : isOccupied ? 'occupied' : 'available'} ${isExcelOccupied ? 'excel-occupied' : ''} ${isToday ? 'today' : ''}`}
                     key={dateKey}
-                    onClick={() => isAuthenticated && isOccupied && setDeleteCandidateDate(dateKey)}
+                    data-date={date ? dateKey : undefined}
+                    onClick={() => canDeleteDayEvent && setDeleteCandidateDate(dateKey)}
                     onContextMenu={(event) => {
-                      if (!isAuthenticated || !isOccupied) return
+                      if (!canDeleteDayEvent) return
                       event.preventDefault()
                       setDeleteCandidateDate(dateKey)
                     }}
@@ -716,17 +803,23 @@ function App() {
                       <div className="day-label">
                         <span className={`day-number ${isOccupied ? 'occupied' : 'available'}`}>{date.getDate()}</span>
                         <span className="hebrew-date">{getHebrewDate(date)}</span>
+                        {holidayNames.length > 0 && <span className="holiday-label" title={holidayNames.join(' · ')}>{holidayNames.join(' · ')}</span>}
                       </div>
                     )}
                     {dayEvents.map((item) => (
                       <span
                         className="event-pill"
                         key={item.id}
+                        onClick={(event) => {
+                          if (!canDeleteEvent(item)) return
+                          event.stopPropagation()
+                          setDeleteCandidateDate(dateKey)
+                        }}
                         onDoubleClick={(event) => { event.stopPropagation(); setSelectedEvent(item) }}
                         title="לחצי פעמיים להצגת פרטי האירוע"
                       >{item.title}</span>
                     ))}
-                    {isAuthenticated && isOccupied && deleteCandidateDate === dateKey && (
+                    {canDeleteDayEvent && deleteCandidateDate === dateKey && (
                       <button
                         type="button"
                         className="delete-event-button"
@@ -741,10 +834,10 @@ function App() {
         )}
       </section>
 
-      <footer className="software-credit" dir="ltr">
+      {/* <footer className="software-credit" dir="ltr">
         <span>© Carmit Vaknin Software</span>
         <img src="/logo_cv_sw.svg" alt="" aria-hidden="true" />
-      </footer>
+      </footer> */}
 
       {selectedEvent && (
         <div className="modal-backdrop event-details-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedEvent(null)}>
@@ -777,9 +870,13 @@ function App() {
                 שם האירוע
                 <input
                   name="title"
+                  value={eventTitle}
                   placeholder="לדוגמא: בת מצווה ל..  טיול שנתי,  מסיבת סיום"
                   required
-                  onChange={() => setValidationErrors((current) => ({ ...current, title: false }))}
+                  onChange={(event) => {
+                    setEventTitle(event.target.value)
+                    setValidationErrors((current) => ({ ...current, title: false }))
+                  }}
                 />
                 {validationErrors.title && <span className="field-error">שדה חובה למילוי</span>}
               </label>
@@ -788,9 +885,12 @@ function App() {
                 <span className="class-select-wrap">
                   <select
                     name="className"
-                    defaultValue=""
+                    value={eventClassName}
                     required
-                    onChange={() => setValidationErrors((current) => ({ ...current, className: false }))}
+                    onChange={(event) => {
+                      setEventClassName(event.target.value)
+                      setValidationErrors((current) => ({ ...current, className: false }))
+                    }}
                   >
                     <option value="" disabled>בחר כיתה</option>
                     <option value="ו3">ו3</option>
@@ -814,7 +914,11 @@ function App() {
                   showError={dateValidationAttempted && !selectedEventDate}
                 />
               </label>
-              <button className="submit-button" type="submit">שבץ אירוע</button>
+              <button
+                className={`submit-button event-submit-button ${isEventFormComplete ? 'ready' : ''}`}
+                type="submit"
+                disabled={!isEventFormComplete}
+              >שבץ אירוע</button>
             </form>
           </section>
         </div>
