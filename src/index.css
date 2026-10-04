@@ -96,6 +96,10 @@ h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3
 .password-backdrop .password-close-button { top: 18px; left: auto; right: 22px; color: #8060a2; }
 .password-backdrop .password-card { border: 0; background: linear-gradient(145deg, rgba(230, 247, 220, .98), rgba(232, 220, 246, .98) 52%, rgba(244, 224, 236, .98)); box-shadow: 0 24px 70px rgba(73, 38, 91, .2); }
 .password-card h2 { margin: 0 0 22px; color: #41216e; font-family: 'Playfair Display', serif; font-size: 28px; text-align: center; }
+.success-card { text-align: center; }
+.success-card h2 { margin-bottom: 8px; }
+.success-card p { margin: 0 0 22px; color: #806f8f; font-size: 17px; font-weight: 600; }
+.success-image { display: block; width: auto; max-width: 100%; height: 40px; margin: 0 auto 8px; object-fit: contain; opacity: .5; filter: grayscale(1) sepia(1) saturate(5) hue-rotate(225deg) brightness(.75); }
 .password-input-wrap { position: relative; display: block; width: 92%; margin-inline: auto; }
 .password-input-wrap input { width: 100%; padding-left: 48px; }
 .password-card .password-input-wrap input::-ms-reveal,

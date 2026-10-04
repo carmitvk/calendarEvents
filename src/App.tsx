@@ -56,7 +56,8 @@ function getHolidayMap(year: number) {
     candlelighting: false,
   }).forEach((holiday) => {
     const dateKey = toDateKey(holiday.getDate().greg())
-    const name = holiday.render('he').replace(/[\u0591-\u05BD\u05BF-\u05C7]/g, '')
+    const renderedName = holiday.render('he').replace(/[\u0591-\u05BD\u05BF-\u05C7]/g, '')
+    const name = renderedName === 'שמירת בית הספר ליום העליה' ? 'יום העליה' : renderedName
     if (name.includes('סליחות')) return
     const names = holidayMap.get(dateKey) || []
     if (!names.includes(name)) holidayMap.set(dateKey, [...names, name])
@@ -306,6 +307,8 @@ function App() {
   const [isExcelView, setIsExcelView] = useState(false)
   const [eventLimitDate, setEventLimitDate] = useState('')
   const [deletePermissionError, setDeletePermissionError] = useState(false)
+  const [isEventSubmitting, setIsEventSubmitting] = useState(false)
+  const [isEventSuccessDialogOpen, setIsEventSuccessDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingDeletedDates = useRef(new Set<string>())
   const isAuthenticated = userRole !== 'guest'
@@ -408,9 +411,10 @@ function App() {
     setIsFormOpen(true)
   }
 
-  function addEvent(event: FormEvent<HTMLFormElement>) {
+  async function addEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formElement = event.currentTarget
+    const form = new FormData(formElement)
     const title = String(form.get('title') || '').trim()
     const className = String(form.get('className') || '').trim()
     const date = String(form.get('date') || '')
@@ -422,12 +426,14 @@ function App() {
     const newEvent: EventItem = { id: Date.now(), title, className, date, ownerId: sessionUserId, source: 'excel' }
     const nextEvents = [...events, newEvent]
     setEvents(nextEvents)
-    void fetch('/api/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-      body: JSON.stringify({ title, className, date }),
-    }).then(async (response) => {
-      if (response.ok) return
+    setIsEventSubmitting(true)
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        body: JSON.stringify({ title, className, date }),
+      })
+      if (!response.ok) {
       const responseText = await response.text()
       let message = responseText
       let existingDate = ''
@@ -443,16 +449,21 @@ function App() {
         throw new Error('event-limit')
       }
       throw new Error(message || 'Event could not be saved')
-    }).catch((error: unknown) => {
+      }
+      setSelectedEventDate('')
+      setEventTitle('')
+      setEventClassName('')
+      setIsFormOpen(false)
+      setIsEventSuccessDialogOpen(true)
+      formElement.reset()
+    } catch (error: unknown) {
       setEvents(events)
-      if (error instanceof Error && error.message === 'event-limit') return
-      window.alert(error instanceof Error && error.message ? `לא ניתן לשמור את האירוע. ${error.message}` : 'לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
-    })
-    setSelectedEventDate('')
-    setEventTitle('')
-    setEventClassName('')
-    setIsFormOpen(false)
-    event.currentTarget.reset()
+      if (!(error instanceof Error && error.message === 'event-limit')) {
+        window.alert(error instanceof Error && error.message ? `לא ניתן לשמור את האירוע. ${error.message}` : 'לא ניתן לשמור את האירוע. נסי שוב בעוד רגע.')
+      }
+    } finally {
+      setIsEventSubmitting(false)
+    }
   }
 
   function requestAdminAccess() {
@@ -673,6 +684,17 @@ function App() {
               {passwordError && <span className="field-error">סיסמה שגויה</span>}
               <button className="submit-button" type="submit">אישור</button>
             </form>
+          </section>
+        </div>
+      )}
+      {isEventSuccessDialogOpen && (
+        <div className="modal-backdrop password-backdrop success-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsEventSuccessDialogOpen(false)}>
+          <section className="password-card success-card" role="dialog" aria-modal="true" aria-labelledby="event-success-title">
+            <button className="close-button password-close-button" type="button" onClick={() => setIsEventSuccessDialogOpen(false)} aria-label="סגירת הודעת ההצלחה">×</button>
+            <img className="success-image" src="/smile.png" alt="" />
+            <h2 id="event-success-title">בשעה טובה!</h2>
+            <p>האירוע שובץ בהצלחה</p>
+            <button className="submit-button" type="button" onClick={() => setIsEventSuccessDialogOpen(false)}>סגירה</button>
           </section>
         </div>
       )}
@@ -917,8 +939,8 @@ function App() {
               <button
                 className={`submit-button event-submit-button ${isEventFormComplete ? 'ready' : ''}`}
                 type="submit"
-                disabled={!isEventFormComplete}
-              >שבץ אירוע</button>
+                disabled={!isEventFormComplete || isEventSubmitting}
+              >{isEventSubmitting ? 'משבץ אירוע...' : 'שבץ אירוע'}</button>
             </form>
           </section>
         </div>
