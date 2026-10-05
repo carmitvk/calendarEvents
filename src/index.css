@@ -41,7 +41,7 @@ h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3
 .calendar-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; text-align: center; }
 .calendar-heading h2 { font-family: 'Playfair Display', serif; font-size: 32px; color: #674493; }
 .month-kicker { color: #9ca550; font-size: 13px; font-weight: 700; }
-.month-arrow { width: 40px; height: 40px; border: 1px solid #d6cbea; border-radius: 50%; background: white; color: #4b2b7d; font-size: 23px; transition: transform .2s ease, box-shadow .2s ease; }
+.month-arrow { width: 40px; height: 40px; padding: 0; display: inline-flex; align-items: center; justify-content: center; line-height: 1; border: 1px solid #d6cbea; border-radius: 50%; background: white; color: #4b2b7d; font-size: 23px; transition: transform .2s ease, box-shadow .2s ease; }
 .month-arrow:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(120, 95, 175, .12); }
 .month-arrow:disabled { opacity: .35; cursor: not-allowed; }
 .week-row, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
@@ -206,10 +206,11 @@ input::placeholder { color: #b1aab8; }
   h1 { font-size: clamp(28px, 9vw, 38px); }
   .calendar-panel { padding: 18px 5px 24px; border-radius: 18px; }
   .calendar-heading {
-    grid-template-columns: 36px minmax(120px, 150px) 36px;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
     display: grid;
-    justify-content: center;
-    column-gap: 12px;
+    justify-content: stretch;
+    column-gap: 8px;
+    padding: 0 6px;
     margin-bottom: 20px;
   }
   .calendar-heading h2 { font-size: 27px; }
