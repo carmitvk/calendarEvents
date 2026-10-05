@@ -205,7 +205,13 @@ input::placeholder { color: #b1aab8; }
   .primary-button { width: 100%; justify-content: center; }
   h1 { font-size: clamp(28px, 9vw, 38px); }
   .calendar-panel { padding: 18px 5px 24px; border-radius: 18px; }
-  .calendar-heading { margin-bottom: 20px; }
+  .calendar-heading {
+    grid-template-columns: 36px minmax(120px, 150px) 36px;
+    display: grid;
+    justify-content: center;
+    column-gap: 12px;
+    margin-bottom: 20px;
+  }
   .calendar-heading h2 { font-size: 27px; }
   .month-arrow { width: 36px; height: 36px; }
   .week-row { font-size: 12px; padding-bottom: 7px; }
