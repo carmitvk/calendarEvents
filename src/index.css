@@ -79,7 +79,12 @@ h1.admin-mode-title::after { background: linear-gradient(90deg, #8bc8f4, #b9a0f3
 .legend-item { display: inline-flex; align-items: center; gap: 7px; }
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 .available-dot { background: #d8c5f2; }
-.occupied-dot { background: linear-gradient(120deg, #f5d5df, #e8d8f6); }
+.occupied-dot {
+  background: linear-gradient(115deg, #68e8ff 0%, #b8f7ff 30%, #ad91f5 61%, #ff9dcc 100%);
+  background-size: 260% 260%;
+  animation: excel-occupied-glow 7s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(89,218,255,.34);
+}
 .excel-actions { display: inline-flex; align-items: center; gap: 7px; margin-right: auto; }
 .excel-button { border: 1px solid #d5c5ee; border-radius: 8px; padding: 5px 10px; color: #674493; background: #fff; font-size: 12px; transition: background .2s ease, transform .2s ease; }
 .excel-button:hover { background: #f2eafb; transform: translateY(-1px); }
@@ -183,7 +188,7 @@ input::placeholder { color: #b1aab8; }
 }
 .picker-day:disabled:not(.occupied) { color: #bdb8c2; background: #fbfbfc; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
-  .day-cell.excel-occupied, .picker-day.excel-occupied { animation: none; }
+  .day-cell.excel-occupied, .picker-day.excel-occupied, .occupied-dot { animation: none; }
 }
 .picker-day.empty { background: transparent; }
 .selected-date-text { min-height: 20px; margin-top: 8px; color: #8a7a9a; font-size: 12px; font-weight: 500; text-align: center; }
